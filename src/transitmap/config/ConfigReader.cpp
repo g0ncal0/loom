@@ -84,7 +84,9 @@ void ConfigReader::help(const char* bin) const {
             << std::setw(37) << "  --render-node-fronts"
             << "render node fronts\n"
             << std::setw(37) << "  --print-stats"
-            << "write stats to stdout\n";
+            << "write stats to stdout\n"
+            << std::setw(37) << "  --reduce-label-size-in-collisions"
+            << "recursively reduces the size of the labels until there are no collisions\n";
 }
 
 // _____________________________________________________________________________
@@ -112,6 +114,7 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
                          {"mvt-path", required_argument, 0, 17},
                          {"random-colors", no_argument, 0, 18},
                          {"print-stats", no_argument, 0, 19},
+                         {"reduce-label-size-in-collisions", no_argument, 0, 20},
                          {0, 0, 0, 0}};
 
   std::string zoom;
@@ -181,6 +184,9 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
         break;
       case 19:
         cfg->writeStats = true;
+        break;
+      case 20:
+        cfg->reduceLabelSizeInCollisions = true;
         break;
       case 'D':
         cfg->fromDot = true;

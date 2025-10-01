@@ -90,23 +90,44 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
 
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
+    bool reduceLabels = _cfg->reduceLabelSizeInCollisions;
 
     std::vector<StationLabel> cands;
 
     for (uint8_t offset = 0; offset < 3; offset++) {
       for (size_t deg = 0; deg < 8; deg++) {
-        auto band = getStationLblBand(n, fontSize, offset, g);
-        band = util::geo::rotate(band, 45 * deg, *n->pl().getGeom());
+        double auxFontSize = fontSize;
 
-        auto overlaps = getOverlaps(band, n, g);
+        if (reduceLabels) {
+          while (auxFontSize >= 10) {
+            auto band = getStationLblBand(n, auxFontSize, offset, g);
+            band = util::geo::rotate(band, 45 * deg, *n->pl().getGeom());
 
-        if (overlaps.lineOverlaps + overlaps.statLabelOverlaps +
-                overlaps.statOverlaps >
-            0)
-          continue;
-        cands.push_back({PolyLine<double>(band[0]), band, fontSize,
-                         g.isTerminus(n), deg, offset, overlaps,
-                         n->pl().stops().front()});
+            auto overlaps = getOverlaps(band, n, g);
+
+            if ((overlaps.lineOverlaps + overlaps.statLabelOverlaps + overlaps.statOverlaps > 0) && (auxFontSize >= 15)) {
+              auxFontSize -= 5;
+              continue;
+            }
+
+            cands.push_back({PolyLine<double>(band[0]), band, auxFontSize,
+                            g.isTerminus(n), deg, offset, overlaps,
+                            n->pl().stops().front()});
+
+            break;
+          }
+        }
+        else {
+          auto band = getStationLblBand(n, fontSize, offset, g);
+          band = util::geo::rotate(band, 45 * deg, *n->pl().getGeom());
+
+          auto overlaps = getOverlaps(band, n, g);
+          
+          if (overlaps.lineOverlaps + overlaps.statLabelOverlaps + overlaps.statOverlaps > 0) continue;
+          cands.push_back({PolyLine<double>(band[0]), band, fontSize,
+                          g.isTerminus(n), deg, offset, overlaps,
+                          n->pl().stops().front()});
+          }
       }
     }
 

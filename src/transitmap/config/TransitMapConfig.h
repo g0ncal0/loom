@@ -49,6 +49,9 @@ struct Config {
 
   bool renderDirMarkers = false;
   std::string worldFilePath;
+
+  // more arguments for our implementation
+  bool reduceLabelSizeInCollisions = false;
 };
 
 }  // namespace config
