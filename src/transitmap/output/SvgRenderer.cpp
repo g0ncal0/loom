@@ -588,12 +588,26 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
 std::string SvgRenderer::getMarkerPathMale(double w) const {
   UNUSED(w);
 
-  // TODO: adaptar isto ao tamanho da linha
-
   // Arrow Type 1
   if (_cfg->dirArrowType == 1) {
-    //return "M-2,0.5 H1 L0.5,1 L3,0 L0.5,-1 L1,-0.5 H-2 Z";
-    return "M-2,0.4 H0 L-0.5,0.9 L2,0 L-0.5,-0.9 L0,-0.4 H-2 Z";
+    // Um pouco mais larga que a linha
+    // return "M-2,0.4 L0,0.4 L-0.5,0.9 L2,0 L-0.5,-0.9 L0,-0.4 L-2,-0.4 Z";
+    
+    // Mesmo à medida da linha
+    // return "M-1.5,0.1 L0,0.1 L-0.375,0.45 L1.5,0 L-0.375,-0.45 L0,-0.1 L-1.5,-0.1 Z";
+
+    double y1 = 0.1;
+    double y2 = 0.45;
+
+    double auxScale = _cfg->lineWidth / 20;
+    double auxDiv = (auxScale > 1) ? (2 * auxScale) : (2);
+    double scale = 1 + ((auxScale - 1) / auxDiv);
+    y1 *= scale;
+    y2 *= scale;
+
+    std::stringstream path;
+    path << "M-1.5," << y1 << " L0," << y1 << " L-0.375," << y2 << " L1.5,0 L-0.375," << (-y2) << " L0," << (-y1) << " L-1.5," << (-y1) << " Z";
+    return path.str();
   }
 
   // Default Arrow
