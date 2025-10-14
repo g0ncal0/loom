@@ -74,6 +74,8 @@ class SvgRenderer : public Renderer {
   void outputEdges(const shared::rendergraph::RenderGraph& outputGraph,
                    const RenderParams& params);
 
+  std::string oppositeColor(const std::string& hexColor);
+
   void renderEdgeTripGeom(const shared::rendergraph::RenderGraph& outG,
                           const shared::linegraph::LineEdge* e,
                           const RenderParams& params);

@@ -494,6 +494,43 @@ void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
                                         PrintDelegate(paramsOutline, p)));
 }
 
+std::string SvgRenderer::oppositeColor(const std::string& hexColor) {
+    if (hexColor.size() != 6) {
+        return "ff0000";
+    }
+
+    int r, g, b;
+    std::stringstream ss;
+    ss << std::hex << hexColor.substr(0, 2);
+    ss >> r;
+    ss.clear();
+    ss << std::hex << hexColor.substr(2, 2);
+    ss >> g;
+    ss.clear();
+    ss << std::hex << hexColor.substr(4, 2);
+    ss >> b;
+
+    int rOpp = 255 - r;
+    int gOpp = 255 - g;
+    int bOpp = 255 - b;
+
+    double luminance = 0.2126 * rOpp + 0.7152 * gOpp + 0.0722 * bOpp;
+
+    // if the color is too much white, it is changed to red
+    if (luminance > 220) {
+        rOpp = 255;
+        gOpp = 0;
+        bOpp = 0;
+    }
+
+    std::stringstream out;
+    out << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << rOpp
+        << std::setw(2) << gOpp
+        << std::setw(2) << bOpp;
+
+    return out.str();
+}
+
 // _____________________________________________________________________________
 void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
                                      const shared::linegraph::LineEdge* e,
@@ -557,8 +594,8 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
 
       std::string markerPathMale = getMarkerPathMale(lineW);
 
-      // TODO: a cor deve ter uma regra, tipo o inverso da cor da linha, ou pelo menos um caso especial para não chocar com linhas da mesma cor
-      EndMarker emm(markerName.str() + "_m", "red", markerPathMale, lineW,
+      // TODO: além desta lógica pode ser dada a opção de escolher uma cor específica para ser aplicada a todas a setas
+      EndMarker emm(markerName.str() + "_m", "#" + oppositeColor(line->color()), markerPathMale, lineW,
                     lineW);
 
       _markers.push_back(emm);
@@ -599,7 +636,7 @@ std::string SvgRenderer::getMarkerPathMale(double w) const {
     double y1 = 0.1;
     double y2 = 0.45;
 
-    double auxScale = _cfg->lineWidth / 20;
+    double auxScale = w / 20;
     double auxDiv = (auxScale > 1) ? (2 * auxScale) : (2);
     double scale = 1 + ((auxScale - 1) / auxDiv);
     y1 *= scale;
