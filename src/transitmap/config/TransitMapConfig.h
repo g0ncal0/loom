@@ -52,6 +52,7 @@ struct Config {
 
   // more arguments for our implementation
   bool reduceLabelSizeInCollisions = false;
+  int dirArrowType = 0;
 };
 
 }  // namespace config

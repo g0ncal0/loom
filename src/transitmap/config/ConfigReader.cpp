@@ -115,6 +115,7 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
                          {"random-colors", no_argument, 0, 18},
                          {"print-stats", no_argument, 0, 19},
                          {"reduce-label-size-in-collisions", no_argument, 0, 20},
+                         {"dir-arrow-type", required_argument, 0, 21},
                          {0, 0, 0, 0}};
 
   std::string zoom;
@@ -187,6 +188,9 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
         break;
       case 20:
         cfg->reduceLabelSizeInCollisions = true;
+        break;
+      case 21:
+        cfg->dirArrowType = atoi(optarg);
         break;
       case 'D':
         cfg->fromDot = true;

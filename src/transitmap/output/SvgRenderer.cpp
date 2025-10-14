@@ -114,8 +114,18 @@ void SvgRenderer::print(const RenderGraph& outG) {
     params["orient"] = "auto";
     params["markerWidth"] = "20";
     params["markerHeight"] = "4";
-    params["refY"] = "0.5";
     params["refX"] = "0";
+    
+    // Arrow Type 1
+    if (_cfg->dirArrowType == 1) {
+      params["refY"] = "0";
+      params["markerUnits"] = "strokeWidth";
+      params["overflow"] = "visible";
+    }
+    // Default Arrow
+    else {
+      params["refY"] = "0.5";
+    }
 
     _w.openTag("marker", params);
 
@@ -546,7 +556,9 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
       markerName << e << ":" << line << ":" << i;
 
       std::string markerPathMale = getMarkerPathMale(lineW);
-      EndMarker emm(markerName.str() + "_m", "white", markerPathMale, lineW,
+
+      // TODO: a cor deve ter uma regra, tipo o inverso da cor da linha, ou pelo menos um caso especial para não chocar com linhas da mesma cor
+      EndMarker emm(markerName.str() + "_m", "red", markerPathMale, lineW,
                     lineW);
 
       _markers.push_back(emm);
@@ -575,6 +587,16 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
 // _____________________________________________________________________________
 std::string SvgRenderer::getMarkerPathMale(double w) const {
   UNUSED(w);
+
+  // TODO: adaptar isto ao tamanho da linha
+
+  // Arrow Type 1
+  if (_cfg->dirArrowType == 1) {
+    //return "M-2,0.5 H1 L0.5,1 L3,0 L0.5,-1 L1,-0.5 H-2 Z";
+    return "M-2,0.4 H0 L-0.5,0.9 L2,0 L-0.5,-0.9 L0,-0.4 H-2 Z";
+  }
+
+  // Default Arrow
   return "M0,0 V1 H.5 L1.3,.5 L.5,0 Z";
 }
 
