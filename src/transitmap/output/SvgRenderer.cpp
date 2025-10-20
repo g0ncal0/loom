@@ -496,7 +496,7 @@ void SvgRenderer::renderLinePart(const PolyLine<double> p, double width,
 
 std::string SvgRenderer::oppositeColor(const std::string& hexColor) {
     if (hexColor.size() != 6) {
-        return "ff0000";
+        return "black";
     }
 
     int r, g, b;
@@ -510,25 +510,12 @@ std::string SvgRenderer::oppositeColor(const std::string& hexColor) {
     ss << std::hex << hexColor.substr(4, 2);
     ss >> b;
 
-    int rOpp = 255 - r;
-    int gOpp = 255 - g;
-    int bOpp = 255 - b;
+    double luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
-    double luminance = 0.2126 * rOpp + 0.7152 * gOpp + 0.0722 * bOpp;
-
-    // if the color is too much white, it is changed to red
-    if (luminance > 220) {
-        rOpp = 255;
-        gOpp = 0;
-        bOpp = 0;
+    if (luminance >= 127.5) {
+        return "black";
     }
-
-    std::stringstream out;
-    out << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << rOpp
-        << std::setw(2) << gOpp
-        << std::setw(2) << bOpp;
-
-    return out.str();
+    return "white";
 }
 
 // _____________________________________________________________________________
@@ -595,7 +582,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
       std::string markerPathMale = getMarkerPathMale(lineW);
 
       // TODO: além desta lógica pode ser dada a opção de escolher uma cor específica para ser aplicada a todas a setas
-      EndMarker emm(markerName.str() + "_m", "#" + oppositeColor(line->color()), markerPathMale, lineW,
+      EndMarker emm(markerName.str() + "_m", oppositeColor(line->color()), markerPathMale, lineW,
                     lineW);
 
       _markers.push_back(emm);
