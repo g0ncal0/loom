@@ -116,16 +116,9 @@ void SvgRenderer::print(const RenderGraph& outG) {
     params["markerHeight"] = "4";
     params["refX"] = "0";
     
-    // Arrow Type 1
-    if (_cfg->dirArrowType != 0) {
-      params["refY"] = "0";
-      params["markerUnits"] = "strokeWidth";
-      params["overflow"] = "visible";
-    }
-    // Default Arrow
-    else {
-      params["refY"] = "0.5";
-    }
+    params["refY"] = "0";
+    params["markerUnits"] = "strokeWidth";
+    params["overflow"] = "visible";
 
     _w.openTag("marker", params);
 
@@ -612,24 +605,28 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
 std::string SvgRenderer::getMarkerPathMale(double w) const {
   UNUSED(w);
 
+  double auxScale = w / 20;
+  double auxDiv = (auxScale > 1) ? (2 * auxScale) : (2);
+  double scale = 1 + ((auxScale - 1) / auxDiv);
+
+  std::stringstream path;
+
   // Arrow Type 1
   if (_cfg->dirArrowType == 1) {
-    double y1 = 0.1;
-    double y2 = 0.45;
+    double y1 = 0.1 * scale;
+    double y2 = 0.45 * scale;
 
-    double auxScale = w / 20;
-    double auxDiv = (auxScale > 1) ? (2 * auxScale) : (2);
-    double scale = 1 + ((auxScale - 1) / auxDiv);
-    y1 *= scale;
-    y2 *= scale;
-
-    std::stringstream path;
     path << "M-1.5," << y1 << " L0," << y1 << " L-0.375," << y2 << " L0.375," << y2 << " L1.5,0 L0.375," << (-y2) << " L-0.375," << (-y2) << " L0," << (-y1) << " L-1.5," << (-y1) << " Z";
-    return path.str();
   }
 
   // Default Arrow
-  return "M0,0 V1 H.5 L1.3,.5 L.5,0 Z";
+  else {
+    double y = 0.5 * scale;
+
+    path << "M-0.5," << y << " L-0.5," << (-y) << " L0," << (-y) << " L0.8,0 L0," << y << " Z";
+  }
+  // "M-0.5,0.5 L-0.5,-0.5 L0,-0.5 L0.8,0 L0,0.5 Z"
+  return path.str();
 }
 
 // _____________________________________________________________________________
