@@ -117,7 +117,7 @@ void SvgRenderer::print(const RenderGraph& outG) {
     params["refX"] = "0";
     
     // Arrow Type 1
-    if (_cfg->dirArrowType == 1) {
+    if (_cfg->dirArrowType != 0) {
       params["refY"] = "0";
       params["markerUnits"] = "strokeWidth";
       params["overflow"] = "visible";
@@ -614,12 +614,6 @@ std::string SvgRenderer::getMarkerPathMale(double w) const {
 
   // Arrow Type 1
   if (_cfg->dirArrowType == 1) {
-    // Um pouco mais larga que a linha
-    // return "M-2,0.4 L0,0.4 L-0.5,0.9 L2,0 L-0.5,-0.9 L0,-0.4 L-2,-0.4 Z";
-    
-    // Mesmo à medida da linha
-    // return "M-1.5,0.1 L0,0.1 L-0.375,0.45 L1.5,0 L-0.375,-0.45 L0,-0.1 L-1.5,-0.1 Z";
-
     double y1 = 0.1;
     double y2 = 0.45;
 
@@ -630,7 +624,7 @@ std::string SvgRenderer::getMarkerPathMale(double w) const {
     y2 *= scale;
 
     std::stringstream path;
-    path << "M-1.5," << y1 << " L0," << y1 << " L-0.375," << y2 << " L1.5,0 L-0.375," << (-y2) << " L0," << (-y1) << " L-1.5," << (-y1) << " Z";
+    path << "M-1.5," << y1 << " L0," << y1 << " L-0.375," << y2 << " L0.375," << y2 << " L1.5,0 L0.375," << (-y2) << " L-0.375," << (-y2) << " L0," << (-y1) << " L-1.5," << (-y1) << " Z";
     return path.str();
   }
 
