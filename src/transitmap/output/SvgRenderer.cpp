@@ -572,7 +572,7 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
       std::stringstream markerName;
       markerName << e << ":" << line << ":" << i;
 
-      std::string markerPathMale = getMarkerPathMale(lineW);
+      std::string markerPathMale = getMarkerPathMale(lineW + (2 * outlineW));
 
       // TODO: além desta lógica pode ser dada a opção de escolher uma cor específica para ser aplicada a todas a setas
       EndMarker emm(markerName.str() + "_m", oppositeColor(line->color()), markerPathMale, lineW,
@@ -604,29 +604,16 @@ void SvgRenderer::renderEdgeTripGeom(const RenderGraph& outG,
 // _____________________________________________________________________________
 std::string SvgRenderer::getMarkerPathMale(double w) const {
   UNUSED(w);
-
-  double auxScale = w / 20;
-  double auxDiv = (auxScale > 1) ? (2 * auxScale) : (2);
-  double scale = 1 + ((auxScale - 1) / auxDiv);
-
-  std::stringstream path;
-
+  
   // Arrow Type 1
   if (_cfg->dirArrowType == 1) {
-    double y1 = 0.1 * scale;
-    double y2 = 0.45 * scale;
-
-    path << "M-1.5," << y1 << " L0," << y1 << " L-0.375," << y2 << " L0.375," << y2 << " L1.5,0 L0.375," << (-y2) << " L-0.375," << (-y2) << " L0," << (-y1) << " L-1.5," << (-y1) << " Z";
+    return "M-1.5,0.1 L0,0.1 L-0.375,0.45 L0.375,0.45 L1.5,0 L0.375,-0.45 L-0.375,-0.45 L0,-0.1 L-1.5,-0.1 Z";
   }
 
   // Default Arrow
   else {
-    double y = 0.5 * scale;
-
-    path << "M-0.5," << y << " L-0.5," << (-y) << " L0," << (-y) << " L0.8,0 L0," << y << " Z";
+    return "M-0.5,0.5 L-0.5,-0.5 L0,-0.5 L0.8,0 L0,0.5 Z";
   }
-  // "M-0.5,0.5 L-0.5,-0.5 L0,-0.5 L0.8,0 L0,0.5 Z"
-  return path.str();
 }
 
 // _____________________________________________________________________________
