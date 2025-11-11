@@ -97,6 +97,7 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   // TODO: make the following functions private
   void addLine(const Line* r);
   const Line* getLine(const std::string& id) const;
+  const Line* getLine(const std::string& id, const std::string& labelId) const;
   void expandBBox(const util::geo::Point<double>& p);
 
   size_t numNds() const;
@@ -190,6 +191,7 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   std::string getLineColor(const nlohmann::json::object_t& line);
   std::string getLineLabel(const nlohmann::json::object_t& line);
   std::string getLineId(const nlohmann::json::object_t& line);
+  std::string getLineLabelId(const nlohmann::json::object_t& line);
 
   std::string getStationLabel(const nlohmann::json::object_t& props);
   std::string getStationId(const nlohmann::json::object_t& props);

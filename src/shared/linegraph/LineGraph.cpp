@@ -101,8 +101,12 @@ void LineGraph::readFromDot(std::istream* s) {
         }
 
         std::string id;
+        std::string labelId;
         if (ent.attrs.find("id") != ent.attrs.end()) {
           id = ent.attrs["id"];
+          if (ent.attrs.find("label_id") != ent.attrs.end()) {
+            labelId = ent.attrs["label_id"];
+          }
         } else if (ent.attrs.find("label") != ent.attrs.end()) {
           id = ent.attrs["label"];
         } else if (ent.attrs.find("color") != ent.attrs.end()) {
@@ -111,7 +115,7 @@ void LineGraph::readFromDot(std::istream* s) {
           id = util::toString(eid);
         }
 
-        const Line* r = getLine(id);
+        const Line* r = getLine(id, labelId);
         if (!r) {
           std::string label = ent.attrs.find("label") == ent.attrs.end()
                                   ? ""
@@ -119,7 +123,7 @@ void LineGraph::readFromDot(std::istream* s) {
           std::string color = ent.attrs.find("color") == ent.attrs.end()
                                   ? ""
                                   : ent.attrs["color"];
-          r = new Line(id, label, color);
+          r = new Line(id, label, color, labelId);
           addLine(r);
         }
 
@@ -549,6 +553,16 @@ void LineGraph::addLine(const Line* l) { _lines[l->id()] = l; }
 // _____________________________________________________________________________
 const Line* LineGraph::getLine(const std::string& id) const {
   if (_lines.find(id) != _lines.end()) return _lines.find(id)->second;
+  return 0;
+}
+
+const Line* LineGraph::getLine(const std::string& id, const std::string& labelId) const {
+  for (const auto& pair : _lines) {
+    const Line* line = pair.second;
+    if (line->id() == id && line->labelId() == labelId) {
+      return line;
+    }
+  }
   return 0;
 }
 
@@ -1350,6 +1364,27 @@ std::string LineGraph::getLineId(const nlohmann::json::object_t& line) {
 }
 
 // _____________________________________________________________________________
+std::string LineGraph::getLineLabelId(const nlohmann::json::object_t& line) {
+  std::string lineLabel;
+
+  if (line.count("label_id")) {
+    lineLabel = line.at("label_id").get<std::string>();
+  } else if (line.count("\"label_id\"")) {
+    lineLabel = line.at("\"label_id\"").get<std::string>();
+  } else if (line.count("?label_id")) {
+    lineLabel = line.at("?label_id").get<std::string>();
+  } else if (line.count("\"?label_id\"")) {
+    lineLabel = line.at("\"?label_id\"").get<std::string>();
+  }
+
+  lineLabel = util::trim(lineLabel, "\"");
+
+  if (lineLabel.empty()) lineLabel = "";
+
+  return util::trim(lineLabel, "\"");
+}
+
+// _____________________________________________________________________________
 std::string LineGraph::getLineColor(const nlohmann::json::object_t& line) {
   std::string color = "";
 
@@ -1453,12 +1488,13 @@ std::string LineGraph::getStationLabel(const nlohmann::json::object_t& line) {
 void LineGraph::extractLine(const nlohmann::json::object_t& line, LineEdge* e,
                             const std::map<std::string, LineNode*>& idMap) {
   std::string id = getLineId(line);
+  std::string labelId = getLineLabelId(line);
   std::string color = getLineColor(line);
   std::string label = getLineLabel(line);
 
-  const Line* l = getLine(id);
+  const Line* l = getLine(id, labelId);
   if (!l) {
-    l = new Line(id, label, color);
+    l = new Line(id, label, color, labelId);
     addLine(l);
   }
 
