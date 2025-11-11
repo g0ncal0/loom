@@ -115,7 +115,7 @@ void LineGraph::readFromDot(std::istream* s) {
           id = util::toString(eid);
         }
 
-        const Line* r = getLine(id, labelId);
+        const Line* r = getLine(id);
         if (!r) {
           std::string label = ent.attrs.find("label") == ent.attrs.end()
                                   ? ""
@@ -123,9 +123,11 @@ void LineGraph::readFromDot(std::istream* s) {
           std::string color = ent.attrs.find("color") == ent.attrs.end()
                                   ? ""
                                   : ent.attrs["color"];
-          r = new Line(id, label, color, labelId);
+          r = new Line(id, label, color);
           addLine(r);
         }
+
+        // TODO: não há handle para as label lines aqui
 
         LineNode* dir = 0;
 
@@ -551,18 +553,17 @@ ISect LineGraph::getNextIntersection() {
 void LineGraph::addLine(const Line* l) { _lines[l->id()] = l; }
 
 // _____________________________________________________________________________
+void LineGraph::addLabelLine(const Line* l) { _labelLines[l->id()] = l; }
+
+// _____________________________________________________________________________
 const Line* LineGraph::getLine(const std::string& id) const {
   if (_lines.find(id) != _lines.end()) return _lines.find(id)->second;
   return 0;
 }
 
-const Line* LineGraph::getLine(const std::string& id, const std::string& labelId) const {
-  for (const auto& pair : _lines) {
-    const Line* line = pair.second;
-    if (line->id() == id && line->labelId() == labelId) {
-      return line;
-    }
-  }
+// _____________________________________________________________________________
+const Line* LineGraph::getLabelLine(const std::string& id) const {
+  if (_labelLines.find(id) != _labelLines.end()) return _labelLines.find(id)->second;
   return 0;
 }
 
@@ -1492,10 +1493,16 @@ void LineGraph::extractLine(const nlohmann::json::object_t& line, LineEdge* e,
   std::string color = getLineColor(line);
   std::string label = getLineLabel(line);
 
-  const Line* l = getLine(id, labelId);
+  const Line* l = getLine(id);
   if (!l) {
-    l = new Line(id, label, color, labelId);
+    l = new Line(id, label, color);
     addLine(l);
+  }
+
+  const Line* ll = getLine(labelId);
+  if (!ll) {
+    ll = new Line(labelId, label, color);
+    addLabelLine(ll);
   }
 
   LineNode* dir = 0;

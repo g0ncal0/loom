@@ -96,8 +96,9 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
 
   // TODO: make the following functions private
   void addLine(const Line* r);
+  void addLabelLine(const Line* r);
   const Line* getLine(const std::string& id) const;
-  const Line* getLine(const std::string& id, const std::string& labelId) const;
+  const Line* getLabelLine(const std::string& id) const;
   void expandBBox(const util::geo::Point<double>& p);
 
   size_t numNds() const;
@@ -199,6 +200,7 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   // TODO: remove this
   std::set<LineEdge*> proced;
   std::map<std::string, const Line*> _lines;
+  std::map<std::string, const Line*> _labelLines;
 
   NodeGrid _nodeGrid;
   EdgeGrid _edgeGrid;

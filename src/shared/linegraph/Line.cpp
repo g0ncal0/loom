@@ -14,8 +14,3 @@ const std::string& Line::label() const { return _label; }
 
 // _____________________________________________________________________________
 const std::string& Line::color() const { return _color; }
-
-// _____________________________________________________________________________
-const std::string& Line::labelId() const {
-  return _labelId.empty() ? _id : _labelId;
-}
