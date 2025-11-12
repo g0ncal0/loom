@@ -87,6 +87,35 @@ void LineEdgePL::addLine(const Line* r, const LineNode* dir) {
 }
 
 // _____________________________________________________________________________
+void LineEdgePL::addLabelLine(const Line* r, const LineNode* dir,
+                         util::Nullable<shared::style::LineStyle> ls) {
+  auto f = _labelLineToIdx.find(r);
+  if (f != _labelLineToIdx.end()) {
+    size_t prevIdx = f->second;
+    const auto& prev = _labelLines[prevIdx];
+    // the route is already present in both directions, ignore newly inserted
+    if (prev.direction == 0) return;
+
+    // the route is already present in the same direction, ignore newly inserted
+    if (prev.direction == dir) return;
+
+    // the route is already present in the other direction, make two-way
+    if (prev.direction != dir) {
+      _labelLines[prevIdx].direction = 0;
+      return;
+    }
+  }
+  _labelLineToIdx[r] = _labelLines.size();
+  LineOcc occ(r, dir, ls);
+  _labelLines.push_back(occ);
+}
+
+// _____________________________________________________________________________
+void LineEdgePL::addLabelLine(const Line* r, const LineNode* dir) {
+  addLabelLine(r, dir, util::Nullable<shared::style::LineStyle>());
+}
+
+// _____________________________________________________________________________
 void LineEdgePL::delLine(const Line* r) {
   _lineToIdx[_lines.back().line] = _lineToIdx.find(r)->second;
   _lines[_lineToIdx.find(r)->second] = _lines.back();
@@ -96,6 +125,9 @@ void LineEdgePL::delLine(const Line* r) {
 
 // _____________________________________________________________________________
 const std::vector<LineOcc>& LineEdgePL::getLines() const { return _lines; }
+
+// _____________________________________________________________________________
+const std::vector<LineOcc>& LineEdgePL::getLabelLines() const { return _labelLines; }
 
 // _____________________________________________________________________________
 util::json::Dict LineEdgePL::getAttrs() const {

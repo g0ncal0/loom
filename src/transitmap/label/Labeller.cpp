@@ -207,9 +207,9 @@ void Labeller::labelLines(const RenderGraph& g) {
       // estimate label width
       double fontSize = _cfg->lineLabelSize;
 
-      double labelW = ((fontSize / 3) * (e->pl().getLines().size() - 1));
+      double labelW = ((fontSize / 3) * (e->pl().getLabelLines().size() - 1));
 
-      for (auto lo : e->pl().getLines()) {
+      for (auto lo : e->pl().getLabelLines()) {
         labelW += lo.line->label().size() * (fontSize);
       }
 
@@ -263,7 +263,7 @@ void Labeller::labelLines(const RenderGraph& g) {
                        &lineLabelNeighs);
 
           std::vector<const shared::linegraph::Line*> lines;
-          for (auto lo : e->pl().getLines()) {
+          for (auto lo : e->pl().getLabelLines()) {
             lines.push_back(lo.line);
           }
 

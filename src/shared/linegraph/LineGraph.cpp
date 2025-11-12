@@ -1518,8 +1518,10 @@ void LineGraph::extractLine(const nlohmann::json::object_t& line, LineEdge* e,
     if (line.count("outline-style")) ls.setOutlineCss(line.at("outline-style"));
 
     e->pl().addLine(l, dir, ls);
+    e->pl().addLabelLine(ll, dir, ls);
   } else {
     e->pl().addLine(l, dir);
+    e->pl().addLabelLine(ll, dir);
   }
 }
 

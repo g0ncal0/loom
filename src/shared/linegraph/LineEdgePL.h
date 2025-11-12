@@ -70,7 +70,13 @@ class LineEdgePL : util::geograph::GeoEdgePL<double> {
                util::Nullable<shared::style::LineStyle> ls);
   void addLine(const Line* r, const Node<LineNodePL, LineEdgePL>* dir);
 
+  void addLabelLine(const Line* r, const Node<LineNodePL, LineEdgePL>* dir,
+               util::Nullable<shared::style::LineStyle> ls);
+  void addLabelLine(const Line* r, const Node<LineNodePL, LineEdgePL>* dir);
+
   const std::vector<LineOcc>& getLines() const;
+  
+  const std::vector<LineOcc>& getLabelLines() const;
 
   bool hasLine(const Line* r) const;
   void delLine(const Line* r);
@@ -101,6 +107,8 @@ class LineEdgePL : util::geograph::GeoEdgePL<double> {
  private:
   std::unordered_map<const Line*, size_t> _lineToIdx;
   std::vector<LineOcc> _lines;
+  std::unordered_map<const Line*, size_t> _labelLineToIdx;
+  std::vector<LineOcc> _labelLines;
   bool _dontContract;
   uint32_t _comp = std::numeric_limits<uint32_t>::max();
 
