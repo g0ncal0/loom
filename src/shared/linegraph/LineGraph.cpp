@@ -1499,7 +1499,7 @@ void LineGraph::extractLine(const nlohmann::json::object_t& line, LineEdge* e,
     addLine(l);
   }
 
-  const Line* ll = getLine(labelId);
+  const Line* ll = getLabelLine(labelId);
   if (!ll) {
     ll = new Line(labelId, label, color);
     addLabelLine(ll);

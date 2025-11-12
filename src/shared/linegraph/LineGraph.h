@@ -197,7 +197,6 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   std::string getStationLabel(const nlohmann::json::object_t& props);
   std::string getStationId(const nlohmann::json::object_t& props);
 
-  // TODO: remove this
   std::set<LineEdge*> proced;
   std::map<std::string, const Line*> _lines;
   std::map<std::string, const Line*> _labelLines;
