@@ -984,6 +984,16 @@ void MapConstructor::mergeLines(LineEdge* newE, LineEdge* oldE,
       newE->pl().addLine(l.line, newFrom, l.style);
     }
   }
+
+  for (auto ll : oldE->pl().getLabelLines()) {
+    if (!ll.direction) {
+      newE->pl().addLabelLine(ll.line, 0);
+    } else if (ll.direction == oldE->getTo()) {
+      newE->pl().addLabelLine(ll.line, newTo);
+    } else {
+      newE->pl().addLabelLine(ll.line, newFrom);
+    }
+  }
 }
 
 // _____________________________________________________________________________

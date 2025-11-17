@@ -51,6 +51,8 @@ class LineEdgePL : util::geograph::GeoEdgePL<double> {
   LineEdgePL& operator=(LineEdgePL&& other) {
     _lineToIdx = std::move(other._lineToIdx);
     _lines = std::move(other._lines);
+    _labelLineToIdx = std::move(other._labelLineToIdx);
+    _labelLines = std::move(other._labelLines);
     _dontContract = other._dontContract;
     _comp = other._comp;
     _p = std::move(other._p);
@@ -60,6 +62,8 @@ class LineEdgePL : util::geograph::GeoEdgePL<double> {
   LineEdgePL& operator=(const LineEdgePL& other) {
     _lineToIdx = other._lineToIdx;
     _lines = other._lines;
+    _labelLineToIdx = other._labelLineToIdx;
+    _labelLines = other._labelLines;
     _dontContract = other._dontContract;
     _comp = other._comp;
     _p = other._p;

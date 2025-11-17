@@ -26,6 +26,8 @@ LineEdgePL::LineEdgePL(const PolyLine<double>& p)
 LineEdgePL::LineEdgePL(const LineEdgePL& other)
     : _lineToIdx(other._lineToIdx),
       _lines(other._lines),
+      _labelLineToIdx(other._labelLineToIdx),
+      _labelLines(other._labelLines),
       _dontContract(other._dontContract),
       _comp(other._comp),
       _p(other._p) {}
@@ -34,6 +36,8 @@ LineEdgePL::LineEdgePL(const LineEdgePL& other)
 LineEdgePL::LineEdgePL(LineEdgePL&& other)
     : _lineToIdx(std::move(other._lineToIdx)),
       _lines(std::move(other._lines)),
+      _labelLineToIdx(other._labelLineToIdx),
+      _labelLines(other._labelLines),
       _dontContract(other._dontContract),
       _comp(other._comp),
       _p(std::move(other._p)) {}
@@ -135,11 +139,19 @@ util::json::Dict LineEdgePL::getAttrs() const {
   auto arr = util::json::Array();
   std::string dbg_lines = "";
 
+  int index = 0;
+  bool hasLabelLines = (_lines.size() == _labelLines.size());
+   
   for (auto r : getLines()) {
     auto line = util::json::Dict();
     line["id"] = r.line->id();
     line["label"] = r.line->label();
     line["color"] = r.line->color();
+    if (hasLabelLines) {
+      auto r2 = getLabelLines()[index];
+      line["label_id"] = r2.line->id();
+      index++;
+    }
     if (!r.style.isNull()) {
       if (r.style.get().getCss().size()) line["style"] = r.style.get().getCss();
       if (r.style.get().getOutlineCss().size())
