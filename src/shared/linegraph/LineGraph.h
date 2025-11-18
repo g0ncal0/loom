@@ -49,6 +49,7 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
     _bbox = other._bbox;
     proced = other.proced;
     _lines = other._lines;
+    _labelLines = other._labelLines;
     _nodeGrid = std::move(other._nodeGrid);
     _edgeGrid = std::move(other._edgeGrid);
 
@@ -64,6 +65,7 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
     _bbox = other._bbox;
     proced = other.proced;
     _lines = other._lines;
+    _labelLines = other._labelLines;
     _nodeGrid = std::move(other._nodeGrid);
     _edgeGrid = std::move(other._edgeGrid);
 
@@ -97,6 +99,10 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   // TODO: make the following functions private
   void addLine(const Line* r);
   const Line* getLine(const std::string& id) const;
+
+  void addLabelLine(LabelLine* r);
+  const LabelLine* getLabelLine(const std::string& id) const;
+
   void expandBBox(const util::geo::Point<double>& p);
 
   size_t numNds() const;
@@ -197,6 +203,7 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   // TODO: remove this
   std::set<LineEdge*> proced;
   std::map<std::string, const Line*> _lines;
+  std::map<std::string, const shared::linegraph::LabelLine*> _labelLines;
 
   NodeGrid _nodeGrid;
   EdgeGrid _edgeGrid;

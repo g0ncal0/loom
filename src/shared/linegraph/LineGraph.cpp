@@ -19,6 +19,7 @@ using shared::linegraph::EdgeGrid;
 using shared::linegraph::EdgeOrdering;
 using shared::linegraph::ISect;
 using shared::linegraph::Line;
+using shared::linegraph::LabelLine;
 using shared::linegraph::LineEdge;
 using shared::linegraph::LineGraph;
 using shared::linegraph::LineNode;
@@ -549,6 +550,15 @@ void LineGraph::addLine(const Line* l) { _lines[l->id()] = l; }
 // _____________________________________________________________________________
 const Line* LineGraph::getLine(const std::string& id) const {
   if (_lines.find(id) != _lines.end()) return _lines.find(id)->second;
+  return 0;
+}
+
+// _____________________________________________________________________________
+void LineGraph::addLabelLine(LabelLine* l) { _labelLines[l->id()] = l; }
+
+// _____________________________________________________________________________
+const LabelLine* LineGraph::getLabelLine(const std::string& id) const {
+  if (_labelLines.find(id) != _labelLines.end()) return _labelLines.find(id)->second;
   return 0;
 }
 

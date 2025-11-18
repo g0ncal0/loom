@@ -3,6 +3,7 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include "shared/linegraph/Line.h"
+#include "shared/linegraph/LabelLine.h"
 #include "shared/linegraph/LineEdgePL.h"
 #include "shared/linegraph/LineGraph.h"
 #include "shared/linegraph/LineNodePL.h"
@@ -59,7 +60,9 @@ void LineEdgePL::setPolyline(const PolyLine<double>& p) { _p = p; }
 
 // _____________________________________________________________________________
 void LineEdgePL::addLine(const Line* r, const LineNode* dir,
-                         util::Nullable<shared::style::LineStyle> ls) {
+                         util::Nullable<shared::style::LineStyle> ls, const LabelLine* ll) {
+  // GFN_TODO: Handle para o que fazer com a LabelLine
+
   auto f = _lineToIdx.find(r);
   if (f != _lineToIdx.end()) {
     size_t prevIdx = f->second;
@@ -77,8 +80,15 @@ void LineEdgePL::addLine(const Line* r, const LineNode* dir,
     }
   }
   _lineToIdx[r] = _lines.size();
-  LineOcc occ(r, dir, ls);
+  LineOcc occ(r, ll, dir, ls);
   _lines.push_back(occ);
+}
+
+// _____________________________________________________________________________
+void LineEdgePL::addLine(const Line* r, const LineNode* dir,
+                         util::Nullable<shared::style::LineStyle> ls) {
+  LabelLine* ll = new LabelLine("", "");
+  addLine(r, dir, ls, ll);
 }
 
 // _____________________________________________________________________________
@@ -99,6 +109,8 @@ const std::vector<LineOcc>& LineEdgePL::getLines() const { return _lines; }
 
 // _____________________________________________________________________________
 util::json::Dict LineEdgePL::getAttrs() const {
+  // GFN_TODO: Adicionar aqui o label_id que depois é levado para ser desenhado no svg
+
   util::json::Dict obj;
   auto arr = util::json::Array();
   std::string dbg_lines = "";
