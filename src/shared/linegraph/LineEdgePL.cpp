@@ -90,6 +90,41 @@ void LineEdgePL::addLine(const Line* r, const LineNode* dir) {
   addLine(r, dir, util::Nullable<shared::style::LineStyle>());
 }
 
+bool compareLabelsEdge(const std::string& s1, const std::string& s2, std::string& res) {
+  auto splitIds = [](const std::string& str) {
+      std::set<std::string> ids;
+      std::stringstream ss(str);
+      std::string item;
+
+      while (std::getline(ss, item, '-')) {
+          ids.insert(item);
+      }
+
+      return ids;
+  };
+
+  std::set<std::string> set1 = splitIds(s1);
+  std::set<std::string> set2 = splitIds(s2);
+
+  bool s1ContainsS2 = std::includes(set1.begin(), set1.end(), set2.begin(), set2.end());
+
+  if (!s1ContainsS2) {
+      std::set<std::string> newSet = set1;
+      newSet.insert(set2.begin(), set2.end());
+
+      res.clear();
+      for (auto it = newSet.begin(); it != newSet.end(); ++it) {
+          if (it != newSet.begin()) res += "-";
+          res += *it;
+      }
+  }
+  else {
+    res = s1;
+  }
+
+  return s1ContainsS2;
+}
+
 // _____________________________________________________________________________
 void LineEdgePL::addLabelLine(const Line* r, const LineNode* dir,
                          util::Nullable<shared::style::LineStyle> ls) {
@@ -109,6 +144,35 @@ void LineEdgePL::addLabelLine(const Line* r, const LineNode* dir,
       return;
     }
   }
+
+  /* for (size_t i = 0; i < _labelLines.size(); i++) {
+    auto& lineOcc = _labelLines[i];
+    auto oldLine = lineOcc.line;
+
+    if (oldLine->id().substr(0, 6) == r->id().substr(0, 6)) {
+      std::string newLabel;
+      bool s1ContainsS2 = compareLabelsEdge(oldLine->label(), r->label(), newLabel);
+
+      if(s1ContainsS2) {
+        r->setId(oldLine->id());
+        r->setLabel(oldLine->label());
+      }
+      else {
+        using namespace std::chrono;
+        auto now = high_resolution_clock::now();
+        auto ns = duration_cast<nanoseconds>(now.time_since_epoch()).count();
+
+        r->setId(r->color() + "_" + std::to_string(ns));
+        r->setLabel(newLabel);
+      }
+
+      _labelLineToIdx.erase(oldLine);
+      _labelLines.erase(_labelLines.begin() + i);
+
+      break;
+    }
+  } */
+
   _labelLineToIdx[r] = _labelLines.size();
   LineOcc occ(r, dir, ls);
   _labelLines.push_back(occ);
@@ -125,6 +189,14 @@ void LineEdgePL::delLine(const Line* r) {
   _lines[_lineToIdx.find(r)->second] = _lines.back();
   _lines.resize(_lines.size() - 1);
   _lineToIdx.erase(r);
+}
+
+// _____________________________________________________________________________
+void LineEdgePL::delLabelLine(const Line* r) {
+  _labelLineToIdx[_labelLines.back().line] = _labelLineToIdx.find(r)->second;
+  _labelLines[_labelLineToIdx.find(r)->second] = _labelLines.back();
+  _labelLines.resize(_labelLines.size() - 1);
+  _labelLineToIdx.erase(r);
 }
 
 // _____________________________________________________________________________
@@ -181,6 +253,9 @@ util::json::Dict LineEdgePL::getAttrs() const {
 
 // _____________________________________________________________________________
 bool LineEdgePL::hasLine(const Line* l) const { return _lineToIdx.count(l); }
+
+// _____________________________________________________________________________
+bool LineEdgePL::hasLabelLine(const Line* l) const { return _labelLineToIdx.count(l); }
 
 // _____________________________________________________________________________
 const LineOcc& LineEdgePL::lineOcc(const Line* l) const {

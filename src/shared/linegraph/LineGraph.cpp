@@ -552,8 +552,66 @@ ISect LineGraph::getNextIntersection() {
 // _____________________________________________________________________________
 void LineGraph::addLine(const Line* l) { _lines[l->id()] = l; }
 
+bool compareLabels(const std::string& s1, const std::string& s2, std::string& res) {
+  auto splitIds = [](const std::string& str) {
+      std::set<std::string> ids;
+      std::stringstream ss(str);
+      std::string item;
+
+      while (std::getline(ss, item, '-')) {
+          ids.insert(item);
+      }
+
+      return ids;
+  };
+
+  std::set<std::string> set1 = splitIds(s1);
+  std::set<std::string> set2 = splitIds(s2);
+
+  bool s1ContainsS2 = std::includes(set1.begin(), set1.end(), set2.begin(), set2.end());
+
+  if (!s1ContainsS2) {
+      std::set<std::string> newSet = set1;
+      newSet.insert(set2.begin(), set2.end());
+
+      res.clear();
+      for (auto it = newSet.begin(); it != newSet.end(); ++it) {
+          if (it != newSet.begin()) res += "-";
+          res += *it;
+      }
+  }
+  else {
+    res = s1;
+  }
+
+  return s1ContainsS2;
+}
+
 // _____________________________________________________________________________
-void LineGraph::addLabelLine(const Line* l) { _labelLines[l->id()] = l; }
+void LineGraph::addLabelLine(Line* l) { 
+  for (auto& p : _labelLines) {
+    if (p.first.substr(0, 6) == l->id().substr(0, 6)) {
+      std::string newLabel;
+      bool s1ContainsS2 = compareLabels(p.second->label(), l->label(), newLabel);
+
+      if(s1ContainsS2) {
+        l->setId(p.first);
+        l->setLabel(p.second->label());
+      }
+      else {
+        _labelLines.erase(p.first);
+
+        l->setId(l->color() + "_" + std::to_string(auxCounterId));
+        auxCounterId++;
+        l->setLabel(newLabel);
+      }
+
+      break;
+    }
+  }
+
+  _labelLines[l->id()] = l; 
+}
 
 // _____________________________________________________________________________
 const Line* LineGraph::getLine(const std::string& id) const {
@@ -562,7 +620,7 @@ const Line* LineGraph::getLine(const std::string& id) const {
 }
 
 // _____________________________________________________________________________
-const Line* LineGraph::getLabelLine(const std::string& id) const {
+Line* LineGraph::getLabelLine(const std::string& id) {
   if (_labelLines.find(id) != _labelLines.end()) return _labelLines.find(id)->second;
   return 0;
 }
@@ -1499,7 +1557,7 @@ void LineGraph::extractLine(const nlohmann::json::object_t& line, LineEdge* e,
     addLine(l);
   }
 
-  const Line* ll = getLabelLine(labelId);
+  Line* ll = getLabelLine(labelId);
   if (!ll) {
     ll = new Line(labelId, label, color);
     addLabelLine(ll);

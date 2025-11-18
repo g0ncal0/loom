@@ -141,6 +141,10 @@ int main(int argc, char** argv) {
 
     T_START(construction);
     iters += mc.collapseShrdSegs(10, 50, cfg.segmentLength);
+
+    /* resultGraphs.push_back(&tg);
+    continue; */
+
     iters += mc.collapseShrdSegs(cfg.maxAggrDistance, 50, cfg.segmentLength);
     constrT += T_STOP(construction);
 

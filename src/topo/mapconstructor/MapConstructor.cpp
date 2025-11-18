@@ -68,6 +68,11 @@ bool MapConstructor::lineEq(const LineEdge* a, const LineEdge* b) {
 
     if (!found) return false;
   }
+
+  for (const auto& ra : a->pl().getLabelLines()) {
+    if (!b->pl().hasLabelLine(ra.line)) return false;
+  }
+
   return true;
 }
 
@@ -219,6 +224,19 @@ int MapConstructor::collapseShrdSegs(double dCut, size_t MAX_ITERS,
 
     for (const auto& ep : sortedEdges) {
       auto e = ep.second;
+
+      /* if (e->pl().getLines().size() != e->pl().getLabelLines().size()) {
+        LOG(1) << "JA TAVA ESTRAGADO -> " << e->pl().getLines().size() << " ; " << e->pl().getLabelLines().size() << "   ITER = " << ITER;
+        std::string linesStr, labelsStr;
+        for (auto lineS : e->pl().getLines()) {
+          linesStr += lineS.line->id() + " ; ";
+        }
+        for (auto lineS : e->pl().getLabelLines()) {
+          labelsStr += lineS.line->label() + " ; ";
+        }
+        LOG(1) << "     " << linesStr;
+        LOG(1) << "     " << labelsStr;
+      } */
 
       LineNode* last = 0;
 
@@ -912,29 +930,42 @@ bool MapConstructor::foldEdges(LineEdge* a, LineEdge* b) {
     }
   }
 
+  int index = 0;
   for (auto ro : a->pl().getLines()) {
+    auto& ro2 = a->pl().getLabelLines()[index];
+    index++;
     if (!b->pl().hasLine(ro.line)) {
       // simply add the route
-      if (ro.direction == 0)
+      if (ro.direction == 0) {
         b->pl().addLine(ro.line, 0);
-      else if (ro.direction == shrNd)
+        b->pl().addLabelLine(ro2.line, 0);
+      } else if (ro.direction == shrNd) {
         b->pl().addLine(ro.line, shrNd);
-      else if (ro.direction != shrNd)
+        b->pl().addLabelLine(ro2.line, shrNd);
+      } else if (ro.direction != shrNd) {
         b->pl().addLine(ro.line, b->getOtherNd(shrNd));
+        b->pl().addLabelLine(ro2.line, b->getOtherNd(shrNd));
+      }
     } else {
       auto old = b->pl().lineOcc(ro.line);
       if (ro.direction == 0 && old.direction != 0) {
         // now goes in both directions
         b->pl().delLine(ro.line);
         b->pl().addLine(ro.line, 0);
+        b->pl().delLabelLine(ro2.line);
+        b->pl().addLabelLine(ro2.line, 0);
       } else if (ro.direction == shrNd && old.direction != shrNd) {
         // now goes in both directions
         b->pl().delLine(ro.line);
         b->pl().addLine(ro.line, 0);
+        b->pl().delLabelLine(ro2.line);
+        b->pl().addLabelLine(ro2.line, 0);
       } else if (ro.direction != shrNd && old.direction == shrNd) {
         // now goes in both directions
         b->pl().delLine(ro.line);
         b->pl().addLine(ro.line, 0);
+        b->pl().delLabelLine(ro2.line);
+        b->pl().addLabelLine(ro2.line, 0);
       }
     }
   }
@@ -953,16 +984,23 @@ LineEdgePair MapConstructor::split(LineEdgePL& a, LineNode* fr, LineNode* to,
 
   for (size_t i = 0; i < a.getLines().size(); i++) {
     auto ro = a.getLines()[i];
+    auto ro2 = a.getLabelLines()[i];
     if (ro.direction == to) {
       auto* route = ro.line;  // store because of deletion below
+      auto* route2 = ro2.line;  // store because of deletion below
       a.delLine(ro.line);
       a.addLine(route, helper);
+      a.delLabelLine(ro2.line);
+      a.addLabelLine(route2, helper);
       helperEdg->pl().addLine(route, to);
+      helperEdg->pl().addLabelLine(route2, to);
       i--;
     } else if (ro.direction == fr) {
       helperEdg->pl().addLine(ro.line, helper);
+      helperEdg->pl().addLabelLine(ro2.line, helper);
     } else {
       helperEdg->pl().addLine(ro.line, 0);
+      helperEdg->pl().addLabelLine(ro2.line, 0);
     }
   }
 
@@ -975,22 +1013,18 @@ LineEdgePair MapConstructor::split(LineEdgePL& a, LineNode* fr, LineNode* to,
 void MapConstructor::mergeLines(LineEdge* newE, LineEdge* oldE,
                                 LineNode* newFrom, LineNode* newTo) {
   // add the lines, update the line directions accordingly
+  int index = 0;
   for (auto l : oldE->pl().getLines()) {
+    auto ll = oldE->pl().getLabelLines()[index];
+    index++;
     if (!l.direction) {
       newE->pl().addLine(l.line, 0, l.style);
+      newE->pl().addLabelLine(ll.line, 0);
     } else if (l.direction == oldE->getTo()) {
       newE->pl().addLine(l.line, newTo, l.style);
-    } else {
-      newE->pl().addLine(l.line, newFrom, l.style);
-    }
-  }
-
-  for (auto ll : oldE->pl().getLabelLines()) {
-    if (!ll.direction) {
-      newE->pl().addLabelLine(ll.line, 0);
-    } else if (ll.direction == oldE->getTo()) {
       newE->pl().addLabelLine(ll.line, newTo);
     } else {
+      newE->pl().addLine(l.line, newFrom, l.style);
       newE->pl().addLabelLine(ll.line, newFrom);
     }
   }

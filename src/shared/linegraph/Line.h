@@ -20,6 +20,8 @@ class Line {
   const std::string& id() const;
   const std::string& label() const;
   const std::string& color() const;
+  void setId(const std::string& id) { _id = id; };
+  void setLabel(const std::string& l) { _label = l; };
   void setColor(const std::string& c) { _color = c; };
 
  private:

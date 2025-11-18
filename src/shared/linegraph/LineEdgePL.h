@@ -6,6 +6,7 @@
 #define SHARED_LINEGRAPH_LINEEDGEPL_H_
 
 #include <unordered_map>
+#include <chrono>
 
 #include "shared/linegraph/Line.h"
 #include "shared/style/LineStyle.h"
@@ -13,6 +14,10 @@
 #include "util/geo/GeoGraph.h"
 #include "util/geo/PolyLine.h"
 #include "util/graph/Node.h"
+
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::nanoseconds;
 
 namespace shared {
 namespace linegraph {
@@ -84,6 +89,9 @@ class LineEdgePL : util::geograph::GeoEdgePL<double> {
 
   bool hasLine(const Line* r) const;
   void delLine(const Line* r);
+
+  bool hasLabelLine(const Line* r) const;
+  void delLabelLine(const Line* r);
 
   const LineOcc& lineOcc(const Line* r) const;
   const LineOcc& lineOccAtPos(size_t i) const;
