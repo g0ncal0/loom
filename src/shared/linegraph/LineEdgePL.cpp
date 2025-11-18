@@ -145,37 +145,47 @@ void LineEdgePL::addLabelLine(const Line* r, const LineNode* dir,
     }
   }
 
-  /* for (size_t i = 0; i < _labelLines.size(); i++) {
+  std::string newId, newLabel, newColor = r->color();
+  bool checkSameLine = false;
+
+  for (size_t i = 0; i < _labelLines.size(); i++) {
     auto& lineOcc = _labelLines[i];
     auto oldLine = lineOcc.line;
 
     if (oldLine->id().substr(0, 6) == r->id().substr(0, 6)) {
-      std::string newLabel;
+      checkSameLine = true;
+
       bool s1ContainsS2 = compareLabelsEdge(oldLine->label(), r->label(), newLabel);
 
       if(s1ContainsS2) {
-        r->setId(oldLine->id());
-        r->setLabel(oldLine->label());
+        newId = oldLine->id();
       }
       else {
         using namespace std::chrono;
         auto now = high_resolution_clock::now();
         auto ns = duration_cast<nanoseconds>(now.time_since_epoch()).count();
 
-        r->setId(r->color() + "_" + std::to_string(ns));
-        r->setLabel(newLabel);
+        newId = r->color() + "_" + std::to_string(ns);
       }
 
-      _labelLineToIdx.erase(oldLine);
-      _labelLines.erase(_labelLines.begin() + i);
+      delLabelLine(oldLine);
 
       break;
     }
-  } */
+  }
 
-  _labelLineToIdx[r] = _labelLines.size();
-  LineOcc occ(r, dir, ls);
-  _labelLines.push_back(occ);
+  if (checkSameLine) {
+    Line* newLine = new Line(newId, newLabel, newColor);
+
+    _labelLineToIdx[newLine] = _labelLines.size();
+    LineOcc occ(newLine, dir, ls);
+    _labelLines.push_back(occ);
+  }
+  else {
+    _labelLineToIdx[r] = _labelLines.size();
+    LineOcc occ(r, dir, ls);
+    _labelLines.push_back(occ);
+  }
 }
 
 // _____________________________________________________________________________

@@ -225,7 +225,7 @@ int MapConstructor::collapseShrdSegs(double dCut, size_t MAX_ITERS,
     for (const auto& ep : sortedEdges) {
       auto e = ep.second;
 
-      /* if (e->pl().getLines().size() != e->pl().getLabelLines().size()) {
+      if (e->pl().getLines().size() != e->pl().getLabelLines().size()) {
         LOG(1) << "JA TAVA ESTRAGADO -> " << e->pl().getLines().size() << " ; " << e->pl().getLabelLines().size() << "   ITER = " << ITER;
         std::string linesStr, labelsStr;
         for (auto lineS : e->pl().getLines()) {
@@ -236,7 +236,7 @@ int MapConstructor::collapseShrdSegs(double dCut, size_t MAX_ITERS,
         }
         LOG(1) << "     " << linesStr;
         LOG(1) << "     " << labelsStr;
-      } */
+      }
 
       LineNode* last = 0;
 
@@ -934,6 +934,36 @@ bool MapConstructor::foldEdges(LineEdge* a, LineEdge* b) {
   for (auto ro : a->pl().getLines()) {
     auto& ro2 = a->pl().getLabelLines()[index];
     index++;
+
+    bool tavaDireito = b->pl().getLabelLines().size() == b->pl().getLines().size();
+
+    std::string idA, idB, labelA, labelB;
+    std::string idALabels, idBLabels, labelALabels, labelBLabels;
+
+    for (auto auxOcc : a->pl().getLines()) {
+      auto aux = auxOcc.line;
+      idA += aux->id() + " ; ";
+      labelA += aux->label() + " ; ";
+    }
+    
+    for (auto auxOcc : b->pl().getLines()) {
+      auto aux = auxOcc.line;
+      idB += aux->id() + " ; ";
+      labelB += aux->label() + " ; ";
+    }
+
+    for (auto auxOcc : a->pl().getLabelLines()) {
+      auto aux = auxOcc.line;
+      idALabels += aux->id() + " ; ";
+      labelALabels += aux->label() + " ; ";
+    }
+
+    for (auto auxOcc : b->pl().getLabelLines()) {
+      auto aux = auxOcc.line;
+      idBLabels += aux->id() + " ; ";
+      labelBLabels += aux->label() + " ; ";
+    }
+
     if (!b->pl().hasLine(ro.line)) {
       // simply add the route
       if (ro.direction == 0) {
@@ -946,26 +976,73 @@ bool MapConstructor::foldEdges(LineEdge* a, LineEdge* b) {
         b->pl().addLine(ro.line, b->getOtherNd(shrNd));
         b->pl().addLabelLine(ro2.line, b->getOtherNd(shrNd));
       }
+
+      if (b->pl().getLabelLines().size() != b->pl().getLines().size() && tavaDireito) {
+        LOG(1) << "PARTIU SE DENTRO DO CONSTRUCTOR 1";
+
+        LOG(1) << "     " << idA << " -------- " << labelA;
+        LOG(1) << "     " << idB << " -------- " << labelB;
+        LOG(1) << "     " << idALabels << " -------- " << labelALabels;
+        LOG(1) << "     " << idBLabels << " -------- " << labelBLabels;
+        LOG(1) << "-------------------------------------------------------------";
+
+        idA = idB = labelA = labelB = "";
+
+        for (auto auxOcc : a->pl().getLines()) {
+          auto aux = auxOcc.line;
+          idA += aux->id() + " ; ";
+          labelA += aux->label() + " ; ";
+        }
+        
+        for (auto auxOcc : b->pl().getLines()) {
+          auto aux = auxOcc.line;
+          idB += aux->id() + " ; ";
+          labelB += aux->label() + " ; ";
+        }
+
+        idALabels = idBLabels = labelALabels = labelBLabels = "";
+        
+        for (auto auxOcc : a->pl().getLabelLines()) {
+          auto aux = auxOcc.line;
+          idALabels += aux->id() + " ; ";
+          labelALabels += aux->label() + " ; ";
+        }
+
+        for (auto auxOcc : b->pl().getLabelLines()) {
+          auto aux = auxOcc.line;
+          idBLabels += aux->id() + " ; ";
+          labelBLabels += aux->label() + " ; ";
+        }
+
+        LOG(1) << "     " << idA << " -------- " << labelA;
+        LOG(1) << "     " << idB << " -------- " << labelB;
+        LOG(1) << "     " << idALabels << " -------- " << labelALabels;
+        LOG(1) << "     " << idBLabels << " -------- " << labelBLabels;
+      }
     } else {
       auto old = b->pl().lineOcc(ro.line);
       if (ro.direction == 0 && old.direction != 0) {
         // now goes in both directions
         b->pl().delLine(ro.line);
         b->pl().addLine(ro.line, 0);
-        b->pl().delLabelLine(ro2.line);
+        //b->pl().delLabelLine(ro2.line);
         b->pl().addLabelLine(ro2.line, 0);
       } else if (ro.direction == shrNd && old.direction != shrNd) {
         // now goes in both directions
         b->pl().delLine(ro.line);
         b->pl().addLine(ro.line, 0);
-        b->pl().delLabelLine(ro2.line);
+        //b->pl().delLabelLine(ro2.line);
         b->pl().addLabelLine(ro2.line, 0);
       } else if (ro.direction != shrNd && old.direction == shrNd) {
         // now goes in both directions
         b->pl().delLine(ro.line);
         b->pl().addLine(ro.line, 0);
-        b->pl().delLabelLine(ro2.line);
+        //b->pl().delLabelLine(ro2.line);
         b->pl().addLabelLine(ro2.line, 0);
+      }
+
+      if (b->pl().getLabelLines().size() != b->pl().getLines().size() && tavaDireito) {
+        LOG(1) << "PARTIU SE DENTRO DO CONSTRUCTOR 2";
       }
     }
   }
