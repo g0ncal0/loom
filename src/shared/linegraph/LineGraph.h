@@ -100,7 +100,7 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   void addLine(const Line* r);
   const Line* getLine(const std::string& id) const;
 
-  void addLabelLine(LabelLine* r);
+  void addLabelLine(const LabelLine* r);
   const LabelLine* getLabelLine(const std::string& id) const;
 
   void expandBBox(const util::geo::Point<double>& p);
@@ -196,14 +196,18 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   std::string getLineColor(const nlohmann::json::object_t& line);
   std::string getLineLabel(const nlohmann::json::object_t& line);
   std::string getLineId(const nlohmann::json::object_t& line);
+  std::string getLineLabelId(const nlohmann::json::object_t& line);
 
   std::string getStationLabel(const nlohmann::json::object_t& props);
   std::string getStationId(const nlohmann::json::object_t& props);
 
+  const std::string mergeTwoLabels(const std::string labelA, const std::string labelB);
+  const LabelLine* mergeTwoLabelLines(const LabelLine* a, const LabelLine* b);
+
   // TODO: remove this
   std::set<LineEdge*> proced;
   std::map<std::string, const Line*> _lines;
-  std::map<std::string, const shared::linegraph::LabelLine*> _labelLines;
+  std::map<std::string, const LabelLine*> _labelLines;
 
   NodeGrid _nodeGrid;
   EdgeGrid _edgeGrid;

@@ -60,9 +60,36 @@ void LineEdgePL::setPolyline(const PolyLine<double>& p) { _p = p; }
 
 // _____________________________________________________________________________
 void LineEdgePL::addLine(const Line* r, const LineNode* dir,
-                         util::Nullable<shared::style::LineStyle> ls, const LabelLine* ll) {
-  // GFN_TODO: Handle para o que fazer com a LabelLine
+                         util::Nullable<shared::style::LineStyle> ls) {
+  auto f = _lineToIdx.find(r);
+  if (f != _lineToIdx.end()) {
+    size_t prevIdx = f->second;
+    const auto& prev = _lines[prevIdx];
+    // the route is already present in both directions, ignore newly inserted
+    if (prev.direction == 0) return;
 
+    // the route is already present in the same direction, ignore newly inserted
+    if (prev.direction == dir) return;
+
+    // the route is already present in the other direction, make two-way
+    if (prev.direction != dir) {
+      _lines[prevIdx].direction = 0;
+      return;
+    }
+  }
+  _lineToIdx[r] = _lines.size();
+  LineOcc occ(r, dir, ls);
+  _lines.push_back(occ);
+}
+
+// _____________________________________________________________________________
+void LineEdgePL::addLine(const Line* r, const LineNode* dir) {
+  addLine(r, dir, util::Nullable<shared::style::LineStyle>());
+}
+
+// _____________________________________________________________________________
+void LineEdgePL::addLine(const Line* r, const LabelLine* ll, const LineNode* dir,
+                         util::Nullable<shared::style::LineStyle> ls) {
   auto f = _lineToIdx.find(r);
   if (f != _lineToIdx.end()) {
     size_t prevIdx = f->second;
@@ -85,15 +112,8 @@ void LineEdgePL::addLine(const Line* r, const LineNode* dir,
 }
 
 // _____________________________________________________________________________
-void LineEdgePL::addLine(const Line* r, const LineNode* dir,
-                         util::Nullable<shared::style::LineStyle> ls) {
-  LabelLine* ll = new LabelLine("", "");
-  addLine(r, dir, ls, ll);
-}
-
-// _____________________________________________________________________________
-void LineEdgePL::addLine(const Line* r, const LineNode* dir) {
-  addLine(r, dir, util::Nullable<shared::style::LineStyle>());
+void LineEdgePL::addLine(const Line* r, const LabelLine* ll, const LineNode* dir) {
+  addLine(r, ll, dir, util::Nullable<shared::style::LineStyle>());
 }
 
 // _____________________________________________________________________________

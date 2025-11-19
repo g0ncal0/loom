@@ -27,6 +27,11 @@ class LineNodePL;
 
 struct LineOcc {
   LineOcc() {}
+  LineOcc(const Line* r, const Node<LineNodePL, LineEdgePL>* dir)
+      : line(r), direction(dir) {}
+  LineOcc(const Line* r, const Node<LineNodePL, LineEdgePL>* dir,
+          const util::Nullable<shared::style::LineStyle>& ls)
+      : line(r), direction(dir), style(ls) {}
   LineOcc(const Line* r, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir)
       : line(r), labelLine(ll), direction(dir) {}
   LineOcc(const Line* r, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir,
@@ -70,10 +75,12 @@ class LineEdgePL : util::geograph::GeoEdgePL<double> {
   }
 
   void addLine(const Line* r, const Node<LineNodePL, LineEdgePL>* dir,
-               util::Nullable<shared::style::LineStyle> ls, const LabelLine* ll);
-  void addLine(const Line* r, const Node<LineNodePL, LineEdgePL>* dir,
                util::Nullable<shared::style::LineStyle> ls);
   void addLine(const Line* r, const Node<LineNodePL, LineEdgePL>* dir);
+
+  void addLine(const Line* r, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir,
+               util::Nullable<shared::style::LineStyle> ls);
+  void addLine(const Line* r, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir);
 
   const std::vector<LineOcc>& getLines() const;
 
