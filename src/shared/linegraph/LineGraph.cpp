@@ -1510,7 +1510,7 @@ void LineGraph::extractLine(const nlohmann::json::object_t& line, LineEdge* e,
 
   const LabelLine* ll = getLabelLine(labelId);
   if (!ll) {
-    ll = new LabelLine(labelId, label);
+    ll = new LabelLine(labelId, label, color);
     addLabelLine(ll);
   }
 
@@ -1786,7 +1786,7 @@ const LabelLine* LineGraph::mergeTwoLabelLines(const LabelLine* a, const LabelLi
   }
 
   // If no valid label has been found -> we need to create a new one
-  const LabelLine* ll = new LabelLine(a->id() + "_" + std::to_string(_labelLines.size()), mergedLabel);
+  const LabelLine* ll = new LabelLine(a->id() + "_" + std::to_string(_labelLines.size()), mergedLabel, a->color());
   addLabelLine(ll);
 
   return ll;

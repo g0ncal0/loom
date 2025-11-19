@@ -22,7 +22,7 @@ struct LineLabel {
   double centerDist;
   double fontSize;
 
-  std::vector<const shared::linegraph::Line*> lines;
+  std::vector<const shared::linegraph::LabelLine*> lines;
 };
 
 inline bool operator<(const LineLabel& a, const LineLabel& b) {
