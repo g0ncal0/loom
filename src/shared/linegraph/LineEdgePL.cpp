@@ -138,7 +138,7 @@ util::json::Dict LineEdgePL::getAttrs() const {
   for (auto r : getLines()) {
     auto line = util::json::Dict();
     line["id"] = r.line->id();
-    line["label"] = r.line->label();
+    line["label"] = r.labelLine->label();
     line["color"] = r.line->color();
     if (!r.style.isNull()) {
       if (r.style.get().getCss().size()) line["style"] = r.style.get().getCss();
@@ -148,9 +148,9 @@ util::json::Dict LineEdgePL::getAttrs() const {
 
     if (r.direction != 0) {
       line["direction"] = util::toString(r.direction);
-      dbg_lines += (!arr.size() ? "" : ",") + r.line->label();
+      dbg_lines += (!arr.size() ? "" : ",") + r.labelLine->label();
     } else {
-      dbg_lines += (!arr.size() ? "" : ",") + r.line->label();
+      dbg_lines += (!arr.size() ? "" : ",") + r.labelLine->label();
     }
 
     arr.push_back(line);

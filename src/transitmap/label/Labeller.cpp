@@ -210,7 +210,7 @@ void Labeller::labelLines(const RenderGraph& g) {
       double labelW = ((fontSize / 3) * (e->pl().getLines().size() - 1));
 
       for (auto lo : e->pl().getLines()) {
-        labelW += lo.line->label().size() * (fontSize);
+        labelW += lo.labelLine->label().size() * (fontSize);
       }
 
       // try out positions
