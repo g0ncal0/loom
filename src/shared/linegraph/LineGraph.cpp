@@ -1786,7 +1786,7 @@ const LabelLine* LineGraph::mergeTwoLabelLines(const LabelLine* a, const LabelLi
   }
 
   // If no valid label has been found -> we need to create a new one
-  const LabelLine* ll = new LabelLine(a->id() + "_" + std::to_string(_labelLines.size()), mergedLabel, a->color());
+  const LabelLine* ll = new LabelLine(a->id().substr(0, 6) + "_" + std::to_string(_labelLines.size()), mergedLabel, a->color());
   addLabelLine(ll);
 
   return ll;
