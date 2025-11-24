@@ -916,25 +916,37 @@ bool MapConstructor::foldEdges(LineEdge* a, LineEdge* b) {
     if (!b->pl().hasLine(ro.line)) {
       // simply add the route
       if (ro.direction == 0)
-        b->pl().addLine(ro.line, 0);
+        b->pl().addLine(ro.line, ro.labelLine, 0);
       else if (ro.direction == shrNd)
-        b->pl().addLine(ro.line, shrNd);
+        b->pl().addLine(ro.line, ro.labelLine, shrNd);
       else if (ro.direction != shrNd)
-        b->pl().addLine(ro.line, b->getOtherNd(shrNd));
+        b->pl().addLine(ro.line, ro.labelLine, b->getOtherNd(shrNd));
     } else {
       auto old = b->pl().lineOcc(ro.line);
+      
+      auto dir = old.direction;
+
       if (ro.direction == 0 && old.direction != 0) {
         // now goes in both directions
-        b->pl().delLine(ro.line);
-        b->pl().addLine(ro.line, 0);
+        dir = 0;
       } else if (ro.direction == shrNd && old.direction != shrNd) {
         // now goes in both directions
-        b->pl().delLine(ro.line);
-        b->pl().addLine(ro.line, 0);
+        dir = 0;
       } else if (ro.direction != shrNd && old.direction == shrNd) {
         // now goes in both directions
+        dir = 0;
+      }
+
+      auto ll = old.labelLine;
+
+      if (old.labelLine != ro.labelLine) {
+        // Need to merge the two labels
+        ll = _g->mergeTwoLabelLines(old.labelLine, ro.labelLine);
+      }
+
+      if (dir != old.direction || ll != old.labelLine) {
         b->pl().delLine(ro.line);
-        b->pl().addLine(ro.line, 0);
+        b->pl().addLine(ro.line, ll, dir);
       }
     }
   }
@@ -955,14 +967,15 @@ LineEdgePair MapConstructor::split(LineEdgePL& a, LineNode* fr, LineNode* to,
     auto ro = a.getLines()[i];
     if (ro.direction == to) {
       auto* route = ro.line;  // store because of deletion below
+      auto* labelLine = ro.labelLine;
       a.delLine(ro.line);
-      a.addLine(route, helper);
-      helperEdg->pl().addLine(route, to);
+      a.addLine(route, labelLine, helper);
+      helperEdg->pl().addLine(route, labelLine, to);
       i--;
     } else if (ro.direction == fr) {
-      helperEdg->pl().addLine(ro.line, helper);
+      helperEdg->pl().addLine(ro.line, ro.labelLine, helper);
     } else {
-      helperEdg->pl().addLine(ro.line, 0);
+      helperEdg->pl().addLine(ro.line, ro.labelLine, 0);
     }
   }
 
@@ -976,13 +989,36 @@ void MapConstructor::mergeLines(LineEdge* newE, LineEdge* oldE,
                                 LineNode* newFrom, LineNode* newTo) {
   // add the lines, update the line directions accordingly
   for (auto l : oldE->pl().getLines()) {
+    auto ll = l.labelLine;
+    util::Nullable<shared::style::LineStyle> style = l.style;
+
+    LineNode* dir;
     if (!l.direction) {
-      newE->pl().addLine(l.line, 0, l.style);
+      dir = 0;
     } else if (l.direction == oldE->getTo()) {
-      newE->pl().addLine(l.line, newTo, l.style);
+      dir = newTo;
     } else {
-      newE->pl().addLine(l.line, newFrom, l.style);
+      dir = newFrom;
     }
+    
+    if (newE->pl().hasLine(l.line)) {
+      auto actualLine = newE->pl().lineOcc(l.line);
+
+      if (actualLine.labelLine != l.labelLine) {
+        // Need to merge the two labels
+        ll = _g->mergeTwoLabelLines(actualLine.labelLine, l.labelLine);
+        
+        if (actualLine.labelLine != ll) {
+          // Need to maintain the direction consistent
+          if (actualLine.direction == 0 || actualLine.direction != dir) dir = 0;
+
+          // Need to delete the actualLine
+          newE->pl().delLine(l.line);
+        }
+      }
+    }
+
+    newE->pl().addLine(l.line, ll, dir, style);
   }
 }
 
