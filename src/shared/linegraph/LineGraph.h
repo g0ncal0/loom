@@ -205,6 +205,8 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
 
   const std::string mergeTwoLabels(const std::string labelA, const std::string labelB);
 
+  void checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir);
+
   // TODO: remove this
   std::set<LineEdge*> proced;
   std::map<std::string, const Line*> _lines;

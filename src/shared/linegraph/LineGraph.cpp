@@ -801,7 +801,7 @@ void LineGraph::splitNode(LineNode* n, size_t maxDeg) {
       edgeRpl(eo.first->getOtherNd(n), eo.first, newEdg);
 
       for (auto lo : eo.first->pl().getLines()) {
-        ce->pl().addLine(lo.line, 0);
+        ce->pl().addLine(lo.line, lo.labelLine, 0);
       }
 
       ce->pl().setComponent(eo.first->pl().getComponent());
@@ -1162,7 +1162,7 @@ LineNode* LineGraph::mergeNds(LineNode* a, LineNode* b) {
     if (ex) {
       for (auto lo : e->pl().getLines()) {
         if (lo.direction == a) lo.direction = b;
-        newE->pl().addLine(lo.line, lo.direction);
+        checkLabelsAndAddLine(newE, lo.line, lo.labelLine, lo.direction);
       }
     } else {
       // else add to grid
@@ -1181,7 +1181,7 @@ LineNode* LineGraph::mergeNds(LineNode* a, LineNode* b) {
     if (ex) {
       for (auto lo : e->pl().getLines()) {
         if (lo.direction == a) lo.direction = b;
-        newE->pl().addLine(lo.line, lo.direction);
+        checkLabelsAndAddLine(newE, lo.line, lo.labelLine, lo.direction);
       }
     } else {
       // else add to grid
@@ -1790,4 +1790,26 @@ const LabelLine* LineGraph::mergeTwoLabelLines(const LabelLine* a, const LabelLi
   addLabelLine(ll);
 
   return ll;
+}
+
+// _____________________________________________________________________________
+void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir) {
+  if (e->pl().hasLine(l)) {
+    auto actualLine = e->pl().lineOcc(l);
+
+    if (actualLine.labelLine != ll) {
+      // Need to merge the two labels
+      ll = mergeTwoLabelLines(actualLine.labelLine, ll);
+      
+      if (actualLine.labelLine != ll) {
+        // Need to maintain the direction consistent
+        if (actualLine.direction == 0 || actualLine.direction != dir) dir = 0;
+
+        // Need to delete the actualLine
+        e->pl().delLine(l);
+      }
+    }
+  }
+
+  e->pl().addLine(l, ll, dir);
 }

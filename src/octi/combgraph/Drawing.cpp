@@ -426,7 +426,7 @@ void Drawing::getLineGraph(LineGraph* target) const {
 
         for (auto lo : child->pl().getLines()) {
           // directions will be handled below by nodeRpl
-          edge->pl().addLine(lo.line, lo.direction);
+          edge->pl().addLine(lo.line, lo.labelLine, lo.direction);
         }
 
         assert(child->getTo() == prev || child->getFrom() == prev);
