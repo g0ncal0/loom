@@ -1525,35 +1525,15 @@ void LineGraph::extractLine(const nlohmann::json::object_t& line, LineEdge* e,
     dir = idMap.at(line.at("direction").get<std::string>());
   }
 
-  // Check if the line already exists
-  //    If true -> Check if we need to merge the two labels
-  //               It may be the case that we need to create a new LabelLine
-  if (e->pl().hasLine(l)) {
-    auto actualLine = e->pl().lineOcc(l);
-
-    if (actualLine.labelLine != ll) {
-      // Need to merge the two labels
-      ll = mergeTwoLabelLines(actualLine.labelLine, ll);
-      
-      if (actualLine.labelLine != ll) {
-        // Need to maintain the direction consistent
-        if (actualLine.direction == 0 || actualLine.direction != dir) dir = 0;
-
-        // Need to delete the actualLine
-        e->pl().delLine(l);
-      }
-    }
-  }
-
   if (line.count("style") || line.count("outline-style")) {
     shared::style::LineStyle ls;
 
     if (line.count("style")) ls.setCss(line.at("style"));
     if (line.count("outline-style")) ls.setOutlineCss(line.at("outline-style"));
 
-    e->pl().addLine(l, ll, dir, ls);
+    checkLabelsAndAddLine(e, l, ll, dir, ls);
   } else {
-    e->pl().addLine(l, ll, dir);
+    checkLabelsAndAddLine(e, l, ll, dir);
   }
 }
 
@@ -1798,7 +1778,10 @@ const LabelLine* LineGraph::mergeTwoLabelLines(const LabelLine* a, const LabelLi
 }
 
 // _____________________________________________________________________________
-void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir) {
+void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir, util::Nullable<shared::style::LineStyle> ls) {
+  // Check if the line already exists
+  //    If true -> Check if we need to merge the two labels
+  //               It may be the case that we need to create a new LabelLine
   if (e->pl().hasLine(l)) {
     auto actualLine = e->pl().lineOcc(l);
 
@@ -1816,5 +1799,10 @@ void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLin
     }
   }
 
-  e->pl().addLine(l, ll, dir);
+  e->pl().addLine(l, ll, dir, ls);
+}
+
+// _____________________________________________________________________________
+void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir) {
+  checkLabelsAndAddLine(e, l, ll, dir, util::Nullable<shared::style::LineStyle>());
 }

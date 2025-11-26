@@ -182,7 +182,9 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
 
   const nlohmann::json::object_t& getGraphProps() const { return _graphProps; }
 
-  const LabelLine* mergeTwoLabelLines(const LabelLine* a, const LabelLine* b);
+  void checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir, util::Nullable<shared::style::LineStyle> ls);
+
+  void checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir);
 
  private:
   util::geo::Box<double> _bbox;
@@ -205,8 +207,8 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
 
   const std::string mergeTwoLabels(const std::string labelA, const std::string labelB);
 
-  void checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir);
-
+  const LabelLine* mergeTwoLabelLines(const LabelLine* a, const LabelLine* b);
+  
   // TODO: remove this
   std::set<LineEdge*> proced;
   std::map<std::string, const Line*> _lines;
