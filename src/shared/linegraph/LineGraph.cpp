@@ -31,6 +31,8 @@ using util::geo::DPoint;
 using util::geo::Point;
 using util::graph::Algorithm;
 
+int LineGraph::_labelLinesNumber = 0;
+
 // _____________________________________________________________________________
 void LineGraph::readFromDot(std::istream* s) {
   _bbox = util::geo::Box<double>();
@@ -554,7 +556,10 @@ const Line* LineGraph::getLine(const std::string& id) const {
 }
 
 // _____________________________________________________________________________
-void LineGraph::addLabelLine(const LabelLine* l) { _labelLines[l->id()] = l; }
+void LineGraph::addLabelLine(const LabelLine* l) { 
+  _labelLines[l->id()] = l;
+  _labelLinesNumber++;
+}
 
 // _____________________________________________________________________________
 const LabelLine* LineGraph::getLabelLine(const std::string& id) const {
@@ -1786,7 +1791,7 @@ const LabelLine* LineGraph::mergeTwoLabelLines(const LabelLine* a, const LabelLi
   }
 
   // If no valid label has been found -> we need to create a new one
-  const LabelLine* ll = new LabelLine(a->id().substr(0, 6) + "_" + std::to_string(_labelLines.size()), mergedLabel, a->color());
+  const LabelLine* ll = new LabelLine(a->id().substr(0, 6) + "_" + std::to_string(_labelLinesNumber), mergedLabel, a->color());
   addLabelLine(ll);
 
   return ll;

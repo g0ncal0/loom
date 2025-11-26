@@ -211,6 +211,7 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   std::set<LineEdge*> proced;
   std::map<std::string, const Line*> _lines;
   std::map<std::string, const LabelLine*> _labelLines;
+  static int _labelLinesNumber;
 
   NodeGrid _nodeGrid;
   EdgeGrid _edgeGrid;
