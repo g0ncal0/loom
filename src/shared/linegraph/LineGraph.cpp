@@ -116,6 +116,9 @@ void LineGraph::readFromDot(std::istream* s) {
 
         const Line* r = getLine(id);
         if (!r) {
+          const Line* r1;
+          const Line* r2;
+
           std::string label = ent.attrs.find("label") == ent.attrs.end()
                                   ? ""
                                   : ent.attrs["label"];
@@ -123,7 +126,11 @@ void LineGraph::readFromDot(std::istream* s) {
                                   ? ""
                                   : ent.attrs["color"];
           r = new Line(id, label, color);
+          r1 = new Line(id + "_1", label, color);
+          r2 = new Line(id + "_2", label, color);
           addLine(r);
+          addLine(r1);
+          addLine(r2);
         }
 
         LineNode* dir = 0;
@@ -1509,8 +1516,15 @@ void LineGraph::extractLine(const nlohmann::json::object_t& line, LineEdge* e,
 
   const Line* l = getLine(id);
   if (!l) {
+    const Line* l1;
+    const Line* l2;
+
     l = new Line(id, label, color);
+    l1 = new Line(id + "_1", label, color);
+    l2 = new Line(id + "_2", label, color);
     addLine(l);
+    addLine(l1);
+    addLine(l2);
   }
 
   const LabelLine* ll = getLabelLine(labelId);
