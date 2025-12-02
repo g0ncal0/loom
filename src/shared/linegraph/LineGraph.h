@@ -205,6 +205,10 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   std::string getStationLabel(const nlohmann::json::object_t& props);
   std::string getStationId(const nlohmann::json::object_t& props);
 
+  std::string generateCompleteLabel(const std::set<std::string>& labels);
+  const LabelLine* getLabelLineWithCompleteLabel(const std::string& completeLabel, const LabelLine* oldLabelLine);
+  void updateLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir, util::Nullable<shared::style::LineStyle> ls, const LineOcc* oldLine, const std::set<std::string>& labels);
+
   const std::string mergeTwoLabels(const std::string labelA, const std::string labelB);
 
   const LabelLine* mergeTwoLabelLines(const LabelLine* a, const LabelLine* b);

@@ -1721,6 +1721,47 @@ void LineGraph::removeDeg1Nodes() {
 }
 
 // _____________________________________________________________________________
+std::string LineGraph::generateCompleteLabel(const std::set<std::string>& labels) {
+  std::string res;
+
+  for (auto l : labels) res += l + "-";
+
+  res.pop_back();
+
+  return res;
+}
+
+// _____________________________________________________________________________
+const LabelLine* LineGraph::getLabelLineWithCompleteLabel(const std::string& completeLabel, const LabelLine* oldLabelLine) {
+  for (auto labelLine : _labelLines) {
+    if (labelLine.second->label() == completeLabel) return labelLine.second;
+  }
+
+  // If no valid label has been found -> we need to create a new one
+  const LabelLine* ll = new LabelLine(oldLabelLine->id().substr(0, 6) + "_" + std::to_string(_labelLinesNumber), completeLabel, oldLabelLine->color());
+  addLabelLine(ll);
+
+  return ll;
+}
+
+void LineGraph::updateLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir, util::Nullable<shared::style::LineStyle> ls, const LineOcc* oldLine, const std::set<std::string>& labels) {
+  const std::string completeLabel = generateCompleteLabel(labels);
+  const LabelLine* newLabelLine = getLabelLineWithCompleteLabel(completeLabel, ll);
+
+  if (oldLine == nullptr) {
+    e->pl().addLine(l, newLabelLine, dir, ls);
+  }
+  else {
+    const Line* newLine = oldLine->line;
+    const Node<LineNodePL, LineEdgePL>* newDir = oldLine->direction;
+    util::Nullable<shared::style::LineStyle> newStyle = oldLine->style;
+
+    e->pl().delLine(oldLine->line);
+    e->pl().addLine(newLine, newLabelLine, newDir, newStyle);
+  }
+}
+
+// _____________________________________________________________________________
 const std::string LineGraph::mergeTwoLabels(const std::string labelAStr, const std::string labelBStr) {
   std::istringstream labelA(labelAStr), labelB(labelBStr);
   std::string id1, id2;
@@ -1793,36 +1834,14 @@ const LabelLine* LineGraph::mergeTwoLabelLines(const LabelLine* a, const LabelLi
 
 // _____________________________________________________________________________
 void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir, util::Nullable<shared::style::LineStyle> ls) {   
-  /* // Check if the line already exists
-  //    If true -> Check if we need to merge the two labels
-  //               It may be the case that we need to create a new LabelLine
-  if (e->pl().hasLine(l)) {
-    auto actualLine = e->pl().lineOcc(l);
-
-    if (actualLine.labelLine != ll) {
-      // Need to merge the two labels
-      ll = mergeTwoLabelLines(actualLine.labelLine, ll);
-      
-      if (actualLine.labelLine != ll) {
-        // Need to maintain the direction consistent
-        if (actualLine.direction == 0 || actualLine.direction != dir) dir = 0;
-
-        // Need to delete the actualLine
-        e->pl().delLine(l);
-      }
-    }
-  }
-
-  e->pl().addLine(l, ll, dir, ls); */
-  
   std::set<std::string> labelsWithBothDirs, labelsDirSame, labelsDirDiff;
   bool changeBothDir, changeDirSame, changeDirDiff;
   changeBothDir = changeDirSame = changeDirDiff = false;
 
   std::string idWithoutDir = l->id().substr(0, l->id().find_first_of('_'));
 
-  const Node<LineNodePL, LineEdgePL>* auxDir = nullptr;
   const LineOcc *line0, *line1, *line2;
+  line0 = line1 = line2 = nullptr;
 
   for (const auto& lo : e->pl().getLines()) {
     if (lo.line->color() == l->color() && lo.line->id().substr(0, idWithoutDir.length()) == idWithoutDir) {
@@ -1833,8 +1852,7 @@ void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLin
       }
 
       // Get the lines with the same direction as an existing one
-      else if ((dir == lo.direction) || (dir == 0 && auxDir == nullptr)) {
-        auxDir = lo.direction;
+      else if ((dir == lo.direction) || (dir == 0 && line1 == nullptr)) {
         labelsDirSame.insert(lo.labelLine->lineLabels().begin(), lo.labelLine->lineLabels().end());
         line1 = &lo;
       }
@@ -1865,7 +1883,7 @@ void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLin
       }
     }
 
-    if (!changeBothDir) {
+    if (!changeBothDir && line0 != nullptr) {
       return;
     }
   }
@@ -1887,12 +1905,15 @@ void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLin
       }
     }
 
-    if (!changeDirSame) {
+    if (!changeDirSame && line1 != nullptr) {
       return;
     }
   }
   
   // Now we need to erase and update the lines accordingly
+  if (changeBothDir) updateLine(e, l, ll, dir, ls, line0, labelsWithBothDirs);
+  if (changeDirSame) updateLine(e, l, ll, dir, ls, line1, labelsDirSame);
+  if (changeDirDiff) updateLine(e, l, ll, dir, ls, line2, labelsDirDiff);
 }
 
 // _____________________________________________________________________________
