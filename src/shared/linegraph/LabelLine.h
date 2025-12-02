@@ -24,6 +24,7 @@ class LabelLine {
   const std::string& id() const;
   const std::string& label() const;
   const std::string& color() const;
+  const std::set<std::string>& lineLabels() const;
 
  private:
   std::string _id, _label, _color;

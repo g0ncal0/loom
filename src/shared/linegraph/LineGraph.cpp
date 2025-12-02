@@ -1792,8 +1792,8 @@ const LabelLine* LineGraph::mergeTwoLabelLines(const LabelLine* a, const LabelLi
 }
 
 // _____________________________________________________________________________
-void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir, util::Nullable<shared::style::LineStyle> ls) {
-  // Check if the line already exists
+void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir, util::Nullable<shared::style::LineStyle> ls) {   
+  /* // Check if the line already exists
   //    If true -> Check if we need to merge the two labels
   //               It may be the case that we need to create a new LabelLine
   if (e->pl().hasLine(l)) {
@@ -1813,7 +1813,86 @@ void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLin
     }
   }
 
-  e->pl().addLine(l, ll, dir, ls);
+  e->pl().addLine(l, ll, dir, ls); */
+  
+  std::set<std::string> labelsWithBothDirs, labelsDirSame, labelsDirDiff;
+  bool changeBothDir, changeDirSame, changeDirDiff;
+  changeBothDir = changeDirSame = changeDirDiff = false;
+
+  std::string idWithoutDir = l->id().substr(0, l->id().find_first_of('_'));
+
+  const Node<LineNodePL, LineEdgePL>* auxDir = nullptr;
+  const LineOcc *line0, *line1, *line2;
+
+  for (const auto& lo : e->pl().getLines()) {
+    if (lo.line->color() == l->color() && lo.line->id().substr(0, idWithoutDir.length()) == idWithoutDir) {
+      // Get the lines with both directions
+      if (lo.direction == 0) {
+        labelsWithBothDirs.insert(lo.labelLine->lineLabels().begin(), lo.labelLine->lineLabels().end());
+        line0 = &lo;
+      }
+
+      // Get the lines with the same direction as an existing one
+      else if ((dir == lo.direction) || (dir == 0 && auxDir == nullptr)) {
+        auxDir = lo.direction;
+        labelsDirSame.insert(lo.labelLine->lineLabels().begin(), lo.labelLine->lineLabels().end());
+        line1 = &lo;
+      }
+
+      // Get the lines with different direction of the existing one
+      else {
+        labelsDirDiff.insert(lo.labelLine->lineLabels().begin(), lo.labelLine->lineLabels().end());
+        line2 = &lo;
+      }
+    }
+  }
+
+  if (dir == 0) {
+    for (const auto& label : ll->lineLabels()) {
+      if (!labelsWithBothDirs.count(label)) {
+        changeBothDir = true;
+        labelsWithBothDirs.insert(label);
+
+        if (labelsDirSame.count(label)) {
+          changeDirSame = true;
+          labelsDirSame.erase(label);
+        }
+
+        if (labelsDirDiff.count(label)) {
+          changeDirDiff = true;
+          labelsDirDiff.erase(label);
+        }
+      }
+    }
+
+    if (!changeBothDir) {
+      return;
+    }
+  }
+
+  else {
+    for (const auto& label : ll->lineLabels()) {
+      if (!labelsDirSame.count(label)) {
+
+        if (labelsDirDiff.count(label)) {
+          changeDirDiff = true;
+          changeBothDir = true;
+          labelsDirDiff.erase(label);
+          labelsWithBothDirs.insert(label);
+        }
+        else {
+          changeDirSame = true;
+          labelsDirSame.insert(label);
+        }
+      }
+    }
+
+    if (!changeDirSame) {
+      return;
+    }
+  }
+  
+  // Now we need to erase and update the lines accordingly
 }
 
 // _____________________________________________________________________________

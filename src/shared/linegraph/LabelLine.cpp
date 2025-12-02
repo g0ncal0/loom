@@ -10,3 +10,6 @@ const std::string& LabelLine::label() const { return _label; }
 
 // _____________________________________________________________________________
 const std::string& LabelLine::color() const { return _color; }
+
+// _____________________________________________________________________________
+const std::set<std::string>& LabelLine::lineLabels() const { return _linesLabels; }
