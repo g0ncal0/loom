@@ -1726,7 +1726,7 @@ std::string LineGraph::generateCompleteLabel(const std::set<std::string>& labels
 
   for (auto l : labels) res += l + "-";
 
-  res.pop_back();
+  if (!res.empty()) res.pop_back();
 
   return res;
 }
@@ -1734,7 +1734,9 @@ std::string LineGraph::generateCompleteLabel(const std::set<std::string>& labels
 // _____________________________________________________________________________
 const LabelLine* LineGraph::getLabelLineWithCompleteLabel(const std::string& completeLabel, const LabelLine* oldLabelLine) {
   for (auto labelLine : _labelLines) {
-    if (labelLine.second->label() == completeLabel) return labelLine.second;
+    if (labelLine.second->label() == completeLabel) {
+      return labelLine.second;
+    }
   }
 
   // If no valid label has been found -> we need to create a new one
@@ -1746,18 +1748,37 @@ const LabelLine* LineGraph::getLabelLineWithCompleteLabel(const std::string& com
 
 void LineGraph::updateLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir, util::Nullable<shared::style::LineStyle> ls, const LineOcc* oldLine, const std::set<std::string>& labels) {
   const std::string completeLabel = generateCompleteLabel(labels);
+
+  if (completeLabel.empty()) {
+
+    if (oldLine != nullptr && e->pl().hasLine(oldLine->line)) {
+      e->pl().delLine(oldLine->line);
+    }
+
+    return;
+  }
+
   const LabelLine* newLabelLine = getLabelLineWithCompleteLabel(completeLabel, ll);
 
   if (oldLine == nullptr) {
     e->pl().addLine(l, newLabelLine, dir, ls);
   }
   else {
-    const Line* newLine = oldLine->line;
+    // TODO: Something wrong here
+    //    é suposto ele ficar com o id e infos da linha que vai ser apagada
+    //      esta info não é mesmo apagada que está mesmo guardada no grafo
+    //      mas falha depois com segmentation fault - não consigo resolver
+    
+    const Line* newLine = getLine(oldLine->line->id());
+
+    LOG(1) << "Vai passar lá";
+    LOG(1) << "New Line Id = " << newLine->id();
+
     const Node<LineNodePL, LineEdgePL>* newDir = oldLine->direction;
     util::Nullable<shared::style::LineStyle> newStyle = oldLine->style;
 
-    e->pl().delLine(oldLine->line);
-    e->pl().addLine(newLine, newLabelLine, newDir, newStyle);
+    if (e->pl().hasLine(oldLine->line)) e->pl().delLine(oldLine->line);
+    e->pl().addLine(newLine, newLabelLine, dir, ls);
   }
 }
 
@@ -1838,13 +1859,15 @@ void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLin
   bool changeBothDir, changeDirSame, changeDirDiff;
   changeBothDir = changeDirSame = changeDirDiff = false;
 
-  std::string idWithoutDir = l->id().substr(0, l->id().find_first_of('_'));
+  std::string idWithoutDir;
+  if (l->id().find('_') == std::string::npos) idWithoutDir = l->id();
+  else idWithoutDir = l->id().substr(0, l->id().find_first_of('_'));
 
   const LineOcc *line0, *line1, *line2;
   line0 = line1 = line2 = nullptr;
 
   for (const auto& lo : e->pl().getLines()) {
-    if (lo.line->color() == l->color() && lo.line->id().substr(0, idWithoutDir.length()) == idWithoutDir) {
+    if (lo.line->color() == l->color() && lo.line->id().length() >= idWithoutDir.length() && lo.line->id().substr(0, idWithoutDir.length()) == idWithoutDir) {
       // Get the lines with both directions
       if (lo.direction == 0) {
         labelsWithBothDirs.insert(lo.labelLine->lineLabels().begin(), lo.labelLine->lineLabels().end());
