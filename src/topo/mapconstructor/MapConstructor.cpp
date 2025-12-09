@@ -922,7 +922,32 @@ bool MapConstructor::foldEdges(LineEdge* a, LineEdge* b) {
       else if (ro.direction != shrNd)
         b->pl().addLine(ro.line, ro.labelLine, b->getOtherNd(shrNd));
     } else {
-      _g->checkLabelsAndAddLine(b, ro.line, ro.labelLine, ro.direction);
+      auto old = b->pl().lineOcc(ro.line);
+      
+      auto dir = old.direction;
+
+      if (ro.direction == 0 && old.direction != 0) {
+        // now goes in both directions
+        dir = 0;
+      } else if (ro.direction == shrNd && old.direction != shrNd) {
+        // now goes in both directions
+        dir = 0;
+      } else if (ro.direction != shrNd && old.direction == shrNd) {
+        // now goes in both directions
+        dir = 0;
+      }
+
+      auto ll = old.labelLine;
+
+      if (old.labelLine != ro.labelLine) {
+        // Need to merge the two labels
+        ll = _g->mergeTwoLabelLines(old.labelLine, ro.labelLine);
+      }
+
+      if (dir != old.direction || ll != old.labelLine) {
+        b->pl().delLine(ro.line);
+        b->pl().addLine(ro.line, ll, dir);
+      }
     }
   }
 
@@ -964,7 +989,36 @@ void MapConstructor::mergeLines(LineEdge* newE, LineEdge* oldE,
                                 LineNode* newFrom, LineNode* newTo) {
   // add the lines, update the line directions accordingly
   for (auto l : oldE->pl().getLines()) {
-    _g->checkLabelsAndAddLine(newE, l.line, l.labelLine, l.direction);
+    auto ll = l.labelLine;
+    util::Nullable<shared::style::LineStyle> style = l.style;
+
+    LineNode* dir;
+    if (!l.direction) {
+      dir = 0;
+    } else if (l.direction == oldE->getTo()) {
+      dir = newTo;
+    } else {
+      dir = newFrom;
+    }
+    
+    if (newE->pl().hasLine(l.line)) {
+      auto actualLine = newE->pl().lineOcc(l.line);
+
+      if (actualLine.labelLine != l.labelLine) {
+        // Need to merge the two labels
+        ll = _g->mergeTwoLabelLines(actualLine.labelLine, l.labelLine);
+        
+        if (actualLine.labelLine != ll) {
+          // Need to maintain the direction consistent
+          if (actualLine.direction == 0 || actualLine.direction != dir) dir = 0;
+
+          // Need to delete the actualLine
+          newE->pl().delLine(l.line);
+        }
+      }
+    }
+
+    newE->pl().addLine(l.line, ll, dir, style);
   }
 }
 
