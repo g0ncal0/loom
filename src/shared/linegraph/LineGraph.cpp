@@ -19,6 +19,7 @@ using shared::linegraph::EdgeGrid;
 using shared::linegraph::EdgeOrdering;
 using shared::linegraph::ISect;
 using shared::linegraph::Line;
+using shared::linegraph::LabelLine;
 using shared::linegraph::LineEdge;
 using shared::linegraph::LineGraph;
 using shared::linegraph::LineNode;
@@ -29,6 +30,8 @@ using util::randomHtmlColor;
 using util::geo::DPoint;
 using util::geo::Point;
 using util::graph::Algorithm;
+
+int LineGraph::_labelLinesNumber = 0;
 
 // _____________________________________________________________________________
 void LineGraph::readFromDot(std::istream* s) {
@@ -553,6 +556,18 @@ const Line* LineGraph::getLine(const std::string& id) const {
 }
 
 // _____________________________________________________________________________
+void LineGraph::addLabelLine(const LabelLine* l) { 
+  _labelLines[l->id()] = l;
+  _labelLinesNumber++;
+}
+
+// _____________________________________________________________________________
+const LabelLine* LineGraph::getLabelLine(const std::string& id) const {
+  if (_labelLines.find(id) != _labelLines.end()) return _labelLines.find(id)->second;
+  return 0;
+}
+
+// _____________________________________________________________________________
 void LineGraph::fillMissingColors() {
   for (auto& l : _lines) {
     auto ll = const_cast<Line*>(l.second);
@@ -791,7 +806,7 @@ void LineGraph::splitNode(LineNode* n, size_t maxDeg) {
       edgeRpl(eo.first->getOtherNd(n), eo.first, newEdg);
 
       for (auto lo : eo.first->pl().getLines()) {
-        ce->pl().addLine(lo.line, 0);
+        ce->pl().addLine(lo.line, lo.labelLine, 0);
       }
 
       ce->pl().setComponent(eo.first->pl().getComponent());
@@ -1152,7 +1167,7 @@ LineNode* LineGraph::mergeNds(LineNode* a, LineNode* b) {
     if (ex) {
       for (auto lo : e->pl().getLines()) {
         if (lo.direction == a) lo.direction = b;
-        newE->pl().addLine(lo.line, lo.direction);
+        checkLabelsAndAddLine(newE, lo.line, lo.labelLine, lo.direction);
       }
     } else {
       // else add to grid
@@ -1171,7 +1186,7 @@ LineNode* LineGraph::mergeNds(LineNode* a, LineNode* b) {
     if (ex) {
       for (auto lo : e->pl().getLines()) {
         if (lo.direction == a) lo.direction = b;
-        newE->pl().addLine(lo.line, lo.direction);
+        checkLabelsAndAddLine(newE, lo.line, lo.labelLine, lo.direction);
       }
     } else {
       // else add to grid
@@ -1408,6 +1423,41 @@ std::string LineGraph::getLineLabel(const nlohmann::json::object_t& line) {
 }
 
 // _____________________________________________________________________________
+std::string LineGraph::getLineLabelId(const nlohmann::json::object_t& line) {
+  std::string label_id;
+
+  if (line.count("label_id")) {
+    label_id = line.at("label_id").get<std::string>();
+  } else if (line.count("\"label_id\"")) {
+    label_id = line.at("\"label_id\"").get<std::string>();
+  } else if (line.count("?label_id")) {
+    label_id = line.at("?label_id").get<std::string>();
+  } else if (line.count("\"?label_id\"")) {
+    label_id = line.at("\"?label_id\"").get<std::string>();
+  } else if (line.count("lbl_id")) {
+    label_id = line.at("lbl_id").get<std::string>();
+  } else if (line.count("\"lbl_id\"")) {
+    label_id = line.at("\"lbl_id\"").get<std::string>();
+  } else if (line.count("?lbl_id")) {
+    label_id = line.at("?lbl_id").get<std::string>();
+  } else if (line.count("\"?lbl_id\"")) {
+    label_id = line.at("\"?lbl_id\"").get<std::string>();
+  }
+
+  label_id = util::trim(label_id, "\"");
+
+  if (label_id.empty()) {
+    if (!getLineLabel(line).empty()) {
+      label_id = getLineLabel(line);
+    } else if (!getLineColor(line).empty()) {
+      label_id = getLineColor(line);
+    }
+  }
+
+  return util::trim(label_id, "\"");
+}
+
+// _____________________________________________________________________________
 std::string LineGraph::getStationId(const nlohmann::json::object_t& props) {
   std::string id;
 
@@ -1455,11 +1505,18 @@ void LineGraph::extractLine(const nlohmann::json::object_t& line, LineEdge* e,
   std::string id = getLineId(line);
   std::string color = getLineColor(line);
   std::string label = getLineLabel(line);
+  std::string labelId = getLineLabelId(line);
 
   const Line* l = getLine(id);
   if (!l) {
     l = new Line(id, label, color);
     addLine(l);
+  }
+
+  const LabelLine* ll = getLabelLine(labelId);
+  if (!ll) {
+    ll = new LabelLine(labelId, label, color);
+    addLabelLine(ll);
   }
 
   LineNode* dir = 0;
@@ -1474,9 +1531,9 @@ void LineGraph::extractLine(const nlohmann::json::object_t& line, LineEdge* e,
     if (line.count("style")) ls.setCss(line.at("style"));
     if (line.count("outline-style")) ls.setOutlineCss(line.at("outline-style"));
 
-    e->pl().addLine(l, dir, ls);
+    checkLabelsAndAddLine(e, l, ll, dir, ls);
   } else {
-    e->pl().addLine(l, dir);
+    checkLabelsAndAddLine(e, l, ll, dir);
   }
 }
 
@@ -1647,4 +1704,105 @@ void LineGraph::removeDeg1Nodes() {
     _nodeGrid.remove(n);
     delNd(n);
   }
+}
+
+// _____________________________________________________________________________
+const std::string LineGraph::mergeTwoLabels(const std::string labelAStr, const std::string labelBStr) {
+  std::istringstream labelA(labelAStr), labelB(labelBStr);
+  std::string id1, id2;
+  std::string last = "";
+  std::string res;
+
+  bool ok1 = static_cast<bool>(std::getline(labelA, id1, '-'));
+  bool ok2 = static_cast<bool>(std::getline(labelB, id2, '-'));
+
+  while (ok1 && ok2) {
+      std::string smallest;
+
+      if (id1 < id2) {
+          smallest = id1;
+          ok1 = static_cast<bool>(std::getline(labelA, id1, '-'));
+      } else if (id2 < id1) {
+          smallest = id2;
+          ok2 = static_cast<bool>(std::getline(labelB, id2, '-'));
+      } else {
+          smallest = id1;
+          ok1 = static_cast<bool>(std::getline(labelA, id1, '-'));
+          ok2 = static_cast<bool>(std::getline(labelB, id2, '-'));
+      }
+
+      if (smallest != last) {
+          if (!res.empty()) res += "-";
+          res += smallest;
+          last = smallest;
+      }
+  }
+
+  while (ok1) {
+      if (id1 != last) {
+          if (!res.empty()) res += "-";
+          res += id1;
+          last = id1;
+      }
+      ok1 = static_cast<bool>(std::getline(labelA, id1, '-'));
+  }
+
+  while (ok2) {
+      if (id2 != last) {
+          if (!res.empty()) res += "-";
+          res += id2;
+          last = id2;
+      }
+      ok2 = static_cast<bool>(std::getline(labelB, id2, '-'));
+  }
+
+  return res;
+}
+
+// _____________________________________________________________________________
+const LabelLine* LineGraph::mergeTwoLabelLines(const LabelLine* a, const LabelLine* b) {
+  if (a->id() == b->id()) return a;
+
+  //Need to merge the two labels
+  std::string mergedLabel = mergeTwoLabels(a->label(), b->label());
+
+  for (auto labelLine : _labelLines) {
+    if (labelLine.second->label() == mergedLabel) return labelLine.second;
+  }
+
+  // If no valid label has been found -> we need to create a new one
+  const LabelLine* ll = new LabelLine(a->id().substr(0, 6) + "_" + std::to_string(_labelLinesNumber), mergedLabel, a->color());
+  addLabelLine(ll);
+
+  return ll;
+}
+
+// _____________________________________________________________________________
+void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir, util::Nullable<shared::style::LineStyle> ls) {
+  // Check if the line already exists
+  //    If true -> Check if we need to merge the two labels
+  //               It may be the case that we need to create a new LabelLine
+  if (e->pl().hasLine(l)) {
+    auto actualLine = e->pl().lineOcc(l);
+
+    if (actualLine.labelLine != ll) {
+      // Need to merge the two labels
+      ll = mergeTwoLabelLines(actualLine.labelLine, ll);
+      
+      if (actualLine.labelLine != ll) {
+        // Need to maintain the direction consistent
+        if (actualLine.direction == 0 || actualLine.direction != dir) dir = 0;
+
+        // Need to delete the actualLine
+        e->pl().delLine(l);
+      }
+    }
+  }
+
+  e->pl().addLine(l, ll, dir, ls);
+}
+
+// _____________________________________________________________________________
+void LineGraph::checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir) {
+  checkLabelsAndAddLine(e, l, ll, dir, util::Nullable<shared::style::LineStyle>());
 }

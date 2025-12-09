@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "shared/linegraph/Line.h"
+#include "shared/linegraph/LabelLine.h"
 #include "shared/style/LineStyle.h"
 #include "util/Nullable.h"
 #include "util/geo/GeoGraph.h"
@@ -31,14 +32,21 @@ struct LineOcc {
   LineOcc(const Line* r, const Node<LineNodePL, LineEdgePL>* dir,
           const util::Nullable<shared::style::LineStyle>& ls)
       : line(r), direction(dir), style(ls) {}
+  LineOcc(const Line* r, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir)
+      : line(r), labelLine(ll), direction(dir) {}
+  LineOcc(const Line* r, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir,
+          const util::Nullable<shared::style::LineStyle>& ls)
+      : line(r), labelLine(ll), direction(dir), style(ls) {}
   const Line* line;
+  const LabelLine* labelLine;
   const Node<LineNodePL, LineEdgePL>* direction;  // 0 if in both directions
 
   util::Nullable<shared::style::LineStyle> style;
 };
 
 inline bool operator<(const LineOcc& x, const LineOcc& y) {
-  return x.line < y.line;
+  if (x.line != y.line) return x.line < y.line;
+  return x.labelLine < y.labelLine;
 }
 
 class LineEdgePL : util::geograph::GeoEdgePL<double> {
@@ -70,10 +78,16 @@ class LineEdgePL : util::geograph::GeoEdgePL<double> {
                util::Nullable<shared::style::LineStyle> ls);
   void addLine(const Line* r, const Node<LineNodePL, LineEdgePL>* dir);
 
+  void addLine(const Line* r, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir,
+               util::Nullable<shared::style::LineStyle> ls);
+  void addLine(const Line* r, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir);
+
   const std::vector<LineOcc>& getLines() const;
 
   bool hasLine(const Line* r) const;
   void delLine(const Line* r);
+
+  // GFN_TODO: Adicionar um hasLabelLine para checkar se realmente já existe aquela label numa das linhas
 
   const LineOcc& lineOcc(const Line* r) const;
   const LineOcc& lineOccAtPos(size_t i) const;

@@ -432,14 +432,15 @@ LineEdgePair StatInserter::split(LineEdgePL& a, LineNode* fr, LineNode* to,
     auto ro = a.getLines()[i];
     if (ro.direction == to) {
       auto* route = ro.line;  // store because of deletion below
+      auto* labelLine = ro.labelLine;
       a.delLine(ro.line);
-      a.addLine(route, helper);
-      helperEdg->pl().addLine(route, to);
+      a.addLine(route, labelLine, helper);
+      helperEdg->pl().addLine(route, labelLine, to);
       i--;
     } else if (ro.direction == fr) {
-      helperEdg->pl().addLine(ro.line, helper);
+      helperEdg->pl().addLine(ro.line, ro.labelLine, helper);
     } else {
-      helperEdg->pl().addLine(ro.line, 0);
+      helperEdg->pl().addLine(ro.line, ro.labelLine, 0);
     }
   }
 

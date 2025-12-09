@@ -916,26 +916,13 @@ bool MapConstructor::foldEdges(LineEdge* a, LineEdge* b) {
     if (!b->pl().hasLine(ro.line)) {
       // simply add the route
       if (ro.direction == 0)
-        b->pl().addLine(ro.line, 0);
+        b->pl().addLine(ro.line, ro.labelLine, 0);
       else if (ro.direction == shrNd)
-        b->pl().addLine(ro.line, shrNd);
+        b->pl().addLine(ro.line, ro.labelLine, shrNd);
       else if (ro.direction != shrNd)
-        b->pl().addLine(ro.line, b->getOtherNd(shrNd));
+        b->pl().addLine(ro.line, ro.labelLine, b->getOtherNd(shrNd));
     } else {
-      auto old = b->pl().lineOcc(ro.line);
-      if (ro.direction == 0 && old.direction != 0) {
-        // now goes in both directions
-        b->pl().delLine(ro.line);
-        b->pl().addLine(ro.line, 0);
-      } else if (ro.direction == shrNd && old.direction != shrNd) {
-        // now goes in both directions
-        b->pl().delLine(ro.line);
-        b->pl().addLine(ro.line, 0);
-      } else if (ro.direction != shrNd && old.direction == shrNd) {
-        // now goes in both directions
-        b->pl().delLine(ro.line);
-        b->pl().addLine(ro.line, 0);
-      }
+      _g->checkLabelsAndAddLine(b, ro.line, ro.labelLine, ro.direction);
     }
   }
 
@@ -955,14 +942,15 @@ LineEdgePair MapConstructor::split(LineEdgePL& a, LineNode* fr, LineNode* to,
     auto ro = a.getLines()[i];
     if (ro.direction == to) {
       auto* route = ro.line;  // store because of deletion below
+      auto* labelLine = ro.labelLine;
       a.delLine(ro.line);
-      a.addLine(route, helper);
-      helperEdg->pl().addLine(route, to);
+      a.addLine(route, labelLine, helper);
+      helperEdg->pl().addLine(route, labelLine, to);
       i--;
     } else if (ro.direction == fr) {
-      helperEdg->pl().addLine(ro.line, helper);
+      helperEdg->pl().addLine(ro.line, ro.labelLine, helper);
     } else {
-      helperEdg->pl().addLine(ro.line, 0);
+      helperEdg->pl().addLine(ro.line, ro.labelLine, 0);
     }
   }
 
@@ -976,13 +964,7 @@ void MapConstructor::mergeLines(LineEdge* newE, LineEdge* oldE,
                                 LineNode* newFrom, LineNode* newTo) {
   // add the lines, update the line directions accordingly
   for (auto l : oldE->pl().getLines()) {
-    if (!l.direction) {
-      newE->pl().addLine(l.line, 0, l.style);
-    } else if (l.direction == oldE->getTo()) {
-      newE->pl().addLine(l.line, newTo, l.style);
-    } else {
-      newE->pl().addLine(l.line, newFrom, l.style);
-    }
+    _g->checkLabelsAndAddLine(newE, l.line, l.labelLine, l.direction);
   }
 }
 

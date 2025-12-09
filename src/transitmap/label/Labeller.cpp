@@ -210,7 +210,7 @@ void Labeller::labelLines(const RenderGraph& g) {
       double labelW = ((fontSize / 3) * (e->pl().getLines().size() - 1));
 
       for (auto lo : e->pl().getLines()) {
-        labelW += lo.line->label().size() * (fontSize);
+        labelW += lo.labelLine->label().size() * (fontSize);
       }
 
       // try out positions
@@ -262,9 +262,9 @@ void Labeller::labelLines(const RenderGraph& g) {
                        20 * (_cfg->lineWidth + _cfg->lineSpacing),
                        &lineLabelNeighs);
 
-          std::vector<const shared::linegraph::Line*> lines;
+          std::vector<const shared::linegraph::LabelLine*> lines;
           for (auto lo : e->pl().getLines()) {
-            lines.push_back(lo.line);
+            lines.push_back(lo.labelLine);
           }
 
           for (auto neighLabelId : lineLabelNeighs) {

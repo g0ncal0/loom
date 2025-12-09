@@ -3,6 +3,7 @@
 // Authors: Patrick Brosi <brosi@informatik.uni-freiburg.de>
 
 #include "shared/linegraph/Line.h"
+#include "shared/linegraph/LabelLine.h"
 #include "shared/linegraph/LineEdgePL.h"
 #include "shared/linegraph/LineGraph.h"
 #include "shared/linegraph/LineNodePL.h"
@@ -87,6 +88,35 @@ void LineEdgePL::addLine(const Line* r, const LineNode* dir) {
 }
 
 // _____________________________________________________________________________
+void LineEdgePL::addLine(const Line* r, const LabelLine* ll, const LineNode* dir,
+                         util::Nullable<shared::style::LineStyle> ls) {
+  auto f = _lineToIdx.find(r);
+  if (f != _lineToIdx.end()) {
+    size_t prevIdx = f->second;
+    const auto& prev = _lines[prevIdx];
+    // the route is already present in both directions, ignore newly inserted
+    if (prev.direction == 0) return;
+
+    // the route is already present in the same direction, ignore newly inserted
+    if (prev.direction == dir) return;
+
+    // the route is already present in the other direction, make two-way
+    if (prev.direction != dir) {
+      _lines[prevIdx].direction = 0;
+      return;
+    }
+  }
+  _lineToIdx[r] = _lines.size();
+  LineOcc occ(r, ll, dir, ls);
+  _lines.push_back(occ);
+}
+
+// _____________________________________________________________________________
+void LineEdgePL::addLine(const Line* r, const LabelLine* ll, const LineNode* dir) {
+  addLine(r, ll, dir, util::Nullable<shared::style::LineStyle>());
+}
+
+// _____________________________________________________________________________
 void LineEdgePL::delLine(const Line* r) {
   _lineToIdx[_lines.back().line] = _lineToIdx.find(r)->second;
   _lines[_lineToIdx.find(r)->second] = _lines.back();
@@ -99,6 +129,8 @@ const std::vector<LineOcc>& LineEdgePL::getLines() const { return _lines; }
 
 // _____________________________________________________________________________
 util::json::Dict LineEdgePL::getAttrs() const {
+  // GFN_TODO: Adicionar aqui o label_id que depois é levado para ser desenhado no svg
+
   util::json::Dict obj;
   auto arr = util::json::Array();
   std::string dbg_lines = "";
@@ -106,7 +138,13 @@ util::json::Dict LineEdgePL::getAttrs() const {
   for (auto r : getLines()) {
     auto line = util::json::Dict();
     line["id"] = r.line->id();
-    line["label"] = r.line->label();
+    if (r.labelLine != nullptr) {
+      line["label"] = r.labelLine->label();
+      line["label_id"] = r.labelLine->id();
+    }
+    else {
+      line["label"] = r.line->label();
+    }
     line["color"] = r.line->color();
     if (!r.style.isNull()) {
       if (r.style.get().getCss().size()) line["style"] = r.style.get().getCss();
@@ -116,9 +154,9 @@ util::json::Dict LineEdgePL::getAttrs() const {
 
     if (r.direction != 0) {
       line["direction"] = util::toString(r.direction);
-      dbg_lines += (!arr.size() ? "" : ",") + r.line->label();
+      dbg_lines += (!arr.size() ? "" : ",") + r.labelLine->label();
     } else {
-      dbg_lines += (!arr.size() ? "" : ",") + r.line->label();
+      dbg_lines += (!arr.size() ? "" : ",") + r.labelLine->label();
     }
 
     arr.push_back(line);

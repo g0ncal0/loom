@@ -49,6 +49,7 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
     _bbox = other._bbox;
     proced = other.proced;
     _lines = other._lines;
+    _labelLines = other._labelLines;
     _nodeGrid = std::move(other._nodeGrid);
     _edgeGrid = std::move(other._edgeGrid);
 
@@ -64,6 +65,7 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
     _bbox = other._bbox;
     proced = other.proced;
     _lines = other._lines;
+    _labelLines = other._labelLines;
     _nodeGrid = std::move(other._nodeGrid);
     _edgeGrid = std::move(other._edgeGrid);
 
@@ -97,6 +99,10 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   // TODO: make the following functions private
   void addLine(const Line* r);
   const Line* getLine(const std::string& id) const;
+
+  void addLabelLine(const LabelLine* r);
+  const LabelLine* getLabelLine(const std::string& id) const;
+
   void expandBBox(const util::geo::Point<double>& p);
 
   size_t numNds() const;
@@ -176,6 +182,10 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
 
   const nlohmann::json::object_t& getGraphProps() const { return _graphProps; }
 
+  void checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir, util::Nullable<shared::style::LineStyle> ls);
+
+  void checkLabelsAndAddLine(LineEdge* e, const Line* l, const LabelLine* ll, const Node<LineNodePL, LineEdgePL>* dir);
+
  private:
   util::geo::Box<double> _bbox;
 
@@ -190,13 +200,20 @@ class LineGraph : public util::graph::UndirGraph<LineNodePL, LineEdgePL> {
   std::string getLineColor(const nlohmann::json::object_t& line);
   std::string getLineLabel(const nlohmann::json::object_t& line);
   std::string getLineId(const nlohmann::json::object_t& line);
+  std::string getLineLabelId(const nlohmann::json::object_t& line);
 
   std::string getStationLabel(const nlohmann::json::object_t& props);
   std::string getStationId(const nlohmann::json::object_t& props);
 
+  const std::string mergeTwoLabels(const std::string labelA, const std::string labelB);
+
+  const LabelLine* mergeTwoLabelLines(const LabelLine* a, const LabelLine* b);
+  
   // TODO: remove this
   std::set<LineEdge*> proced;
   std::map<std::string, const Line*> _lines;
+  std::map<std::string, const LabelLine*> _labelLines;
+  static int _labelLinesNumber;
 
   NodeGrid _nodeGrid;
   EdgeGrid _edgeGrid;
