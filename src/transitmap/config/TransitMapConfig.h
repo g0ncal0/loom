@@ -52,6 +52,7 @@ struct Config {
 
   // more arguments for our implementation
   bool reduceLabelSizeInCollisions = false;
+  bool showLabelInCollision = false;
   int dirArrowType = 0;
 };
 

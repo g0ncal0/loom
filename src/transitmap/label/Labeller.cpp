@@ -91,6 +91,8 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
   for (auto n : orderedNds) {
     double fontSize = _cfg->stationLabelSize;
     bool reduceLabels = _cfg->reduceLabelSizeInCollisions;
+    bool showLabelInCollision = _cfg->showLabelInCollision;
+    if (showLabelInCollision) reduceLabels = false;
 
     std::vector<StationLabel> cands;
 
@@ -123,7 +125,7 @@ void Labeller::labelStations(const RenderGraph& g, bool notdeg2) {
 
           auto overlaps = getOverlaps(band, n, g);
           
-          if (overlaps.lineOverlaps + overlaps.statLabelOverlaps + overlaps.statOverlaps > 0) continue;
+          if (!showLabelInCollision && overlaps.lineOverlaps + overlaps.statLabelOverlaps + overlaps.statOverlaps > 0) continue;
           cands.push_back({PolyLine<double>(band[0]), band, fontSize,
                           g.isTerminus(n), deg, offset, overlaps,
                           n->pl().stops().front()});

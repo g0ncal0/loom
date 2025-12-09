@@ -86,7 +86,11 @@ void ConfigReader::help(const char* bin) const {
             << std::setw(37) << "  --print-stats"
             << "write stats to stdout\n"
             << std::setw(37) << "  --reduce-label-size-in-collisions"
-            << "recursively reduces the size of the labels until there are no collisions\n";
+            << "recursively reduces the size of the labels until there are no collisions\n"
+            << std::setw(37) << "  --show-label-in-collision"
+            << "show the labels even if they collide\n"
+            << std::setw(37) << "  --dir-arrow-type"
+            << "to define the type of direction arrow to be presented\n";
 }
 
 // _____________________________________________________________________________
@@ -115,7 +119,8 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
                          {"random-colors", no_argument, 0, 18},
                          {"print-stats", no_argument, 0, 19},
                          {"reduce-label-size-in-collisions", no_argument, 0, 20},
-                         {"dir-arrow-type", required_argument, 0, 21},
+                         {"show-label-in-collision", no_argument, 0, 21},
+                         {"dir-arrow-type", required_argument, 0, 22},
                          {0, 0, 0, 0}};
 
   std::string zoom;
@@ -190,6 +195,9 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
         cfg->reduceLabelSizeInCollisions = true;
         break;
       case 21:
+        cfg->showLabelInCollision = true;
+        break;
+      case 22:
         cfg->dirArrowType = atoi(optarg);
         break;
       case 'D':
