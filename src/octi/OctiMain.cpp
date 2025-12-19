@@ -97,7 +97,9 @@ std::vector<DPolygon> readObstacleFile(const std::string& p) {
         std::vector<std::vector<double>> coords = geom["coordinates"][0];
         util::geo::Line<double> l;
         for (auto coord : coords) {
-          l.push_back({coord[0], coord[1]});
+          util::geo::DPoint pnt(coord[0], coord[1]);
+          pnt = util::geo::latLngToWebMerc(pnt);
+          l.push_back(pnt);
         }
         ret.push_back(DPolygon(l));
       }
