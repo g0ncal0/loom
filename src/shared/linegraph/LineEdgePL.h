@@ -87,7 +87,7 @@ class LineEdgePL : util::geograph::GeoEdgePL<double> {
   bool hasLine(const Line* r) const;
   void delLine(const Line* r);
 
-  // GFN_TODO: Adicionar um hasLabelLine para checkar se realmente já existe aquela label numa das linhas
+  bool hasLabelLine(const LabelLine* r) const;
 
   const LineOcc& lineOcc(const Line* r) const;
   const LineOcc& lineOccAtPos(size_t i) const;

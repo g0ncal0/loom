@@ -174,6 +174,16 @@ util::json::Dict LineEdgePL::getAttrs() const {
 bool LineEdgePL::hasLine(const Line* l) const { return _lineToIdx.count(l); }
 
 // _____________________________________________________________________________
+bool LineEdgePL::hasLabelLine(const LabelLine* l) const { 
+  for (const auto& occ : _lines) {
+    if (occ.labelLine && occ.labelLine->id() == l->id()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// _____________________________________________________________________________
 const LineOcc& LineEdgePL::lineOcc(const Line* l) const {
   return _lines[_lineToIdx.find(l)->second];
 }

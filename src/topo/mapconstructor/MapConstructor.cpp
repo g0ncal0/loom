@@ -49,6 +49,7 @@ bool MapConstructor::lineEq(const LineEdge* a, const LineEdge* b) {
 
   for (const auto& ra : a->pl().getLines()) {
     if (!b->pl().hasLine(ra.line)) return false;
+    if (!b->pl().hasLabelLine(ra.labelLine)) return false;
 
     const auto& rb = b->pl().lineOcc(ra.line);
 
