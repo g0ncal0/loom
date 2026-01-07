@@ -649,7 +649,7 @@ void RenderGraph::createMetaNodes() {
         // update the lines
         for (auto ro : del) {
           e->pl().delLine(ro.line);
-          e->pl().addLine(ro.line, ref);
+          e->pl().addLine(ro.line, ro.labelLine, ref);
         }
 
         toDel.insert(onf.n);
