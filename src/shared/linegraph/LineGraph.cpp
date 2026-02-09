@@ -1728,7 +1728,10 @@ void LineGraph::removeDeg1Nodes() {
 
 // _____________________________________________________________________________
 const std::string LineGraph::mergeTwoLabels(const std::string labelAStr, const std::string labelBStr) {
-  std::istringstream labelA(labelAStr), labelB(labelBStr);
+  std::string labelAAux = util::trim(labelAStr, " ");
+  std::string labelBAux = util::trim(labelBStr, " ");
+
+  std::istringstream labelA(labelAAux), labelB(labelBAux);
   std::string id1, id2;
   std::string last = "";
   std::string res;
@@ -1776,7 +1779,7 @@ const std::string LineGraph::mergeTwoLabels(const std::string labelAStr, const s
       ok2 = static_cast<bool>(std::getline(labelB, id2, '-'));
   }
 
-  return res;
+  return (" " + res + " ");
 }
 
 // _____________________________________________________________________________
