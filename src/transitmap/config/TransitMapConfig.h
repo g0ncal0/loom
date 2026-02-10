@@ -54,6 +54,7 @@ struct Config {
   bool reduceLabelSizeInCollisions = false;
   bool showLabelInCollision = false;
   int dirArrowType = 0;
+  bool unifiedLineLabelCodes = false;
 };
 
 }  // namespace config

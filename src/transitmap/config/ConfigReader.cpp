@@ -90,7 +90,9 @@ void ConfigReader::help(const char* bin) const {
             << std::setw(37) << "  --show-label-in-collision"
             << "show the labels even if they collide\n"
             << std::setw(37) << "  --dir-arrow-type"
-            << "to define the type of direction arrow to be presented\n";
+            << "to define the type of direction arrow to be presented\n"
+            << std::setw(37) << "  --unified-line-label-codes"
+            << "unify line labels to codes (e.g. L1, L2 instead of '100-103-108-...')\n";
 }
 
 // _____________________________________________________________________________
@@ -121,6 +123,7 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
                          {"reduce-label-size-in-collisions", no_argument, 0, 20},
                          {"show-label-in-collision", no_argument, 0, 21},
                          {"dir-arrow-type", required_argument, 0, 22},
+                         {"unified-line-label-codes", no_argument, 0, 23},
                          {0, 0, 0, 0}};
 
   std::string zoom;
@@ -199,6 +202,9 @@ void ConfigReader::read(Config* cfg, int argc, char** argv) const {
         break;
       case 22:
         cfg->dirArrowType = atoi(optarg);
+        break;
+      case 23:
+        cfg->unifiedLineLabelCodes = true;
         break;
       case 'D':
         cfg->fromDot = true;

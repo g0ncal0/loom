@@ -45,9 +45,10 @@ void SvgRenderer::print(const RenderGraph& outG) {
       box, outG.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing));
 
   Labeller labeller(_cfg);
+  std::unordered_map<std::string, std::pair<std::string, std::string>> simplerLabels;
   if (_cfg->renderLabels) {
     LOGTO(DEBUG, std::cerr) << "Rendering labels...";
-    labeller.label(outG, _cfg->dontLabelDeg2);
+    labeller.label(outG, _cfg->dontLabelDeg2, simplerLabels, _cfg->unifiedLineLabelCodes);
     box = util::geo::extendBox(labeller.getBBox(), box);
   }
 
@@ -153,7 +154,7 @@ void SvgRenderer::print(const RenderGraph& outG) {
 
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
-    renderLineLabels(labeller, rparams);
+    renderLineLabels(labeller, rparams, simplerLabels, _cfg->unifiedLineLabelCodes);
     renderStationLabels(labeller, rparams);
   }
 
@@ -816,7 +817,9 @@ void SvgRenderer::renderStationLabels(const Labeller& labeller,
 
 // _____________________________________________________________________________
 void SvgRenderer::renderLineLabels(const Labeller& labeller,
-                                   const RenderParams& rparams) {
+                                   const RenderParams& rparams,
+                                   std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels,
+                                   bool unifiedLineLabelCodes) {
   _w.openTag("g");
   size_t id = 0;
   for (auto label : labeller.getLineLabels()) {
@@ -875,12 +878,93 @@ void SvgRenderer::renderLineLabels(const Labeller& labeller,
       _w.openTag("tspan",
                  {{"fill", "#" + line->color()}, {"dx", util::toString(dy)}});
       dy = (label.fontSize * _cfg->outputResolution) / 3;
-      _w.writeText(line->label());
+      if (unifiedLineLabelCodes && simplerLabels.count(line->label())) _w.writeText(simplerLabels[line->label()].first);
+      else _w.writeText(line->label());
       _w.closeTag();
     }
     _w.closeTag();
     _w.closeTag();
   }
+  _w.closeTag();
+
+  if (unifiedLineLabelCodes) renderLineLabelsLegend(simplerLabels);
+}
+
+// _____________________________________________________________________________
+void SvgRenderer::renderLineLabelsLegend(std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
+  std::vector<std::pair<std::string, std::pair<std::string, std::string>>> sortedLabels(simplerLabels.begin(), simplerLabels.end());
+  std::sort(sortedLabels.begin(), sortedLabels.end(), [](const std::pair<std::string, std::pair<std::string, std::string>>& a, const std::pair<std::string, std::pair<std::string, std::string>>& b) {
+    if (a.second.second != b.second.second) {
+      return a.second.second < b.second.second;
+    }
+    
+    return a.second.first < b.second.first;
+  });
+
+  std::string biggestValue;
+  for (const auto& entry : sortedLabels) {
+    if (entry.first.length() > biggestValue.length()) {
+      biggestValue = entry.first;
+    }
+  }
+  
+  _w.openTag("g", {{"id", "legend"}});
+    
+  double legendX = 10;
+  double legendY = 10;
+  double entryHeight = 20;
+  double padding = 5;
+  double boxWidth = 200;
+  
+  // Background box
+  std::map<std::string, std::string> bgParams;
+  bgParams["x"] = std::to_string(legendX);
+  bgParams["y"] = std::to_string(legendY);
+  bgParams["width"] = std::to_string(boxWidth);
+  bgParams["height"] = std::to_string(simplerLabels.size() * entryHeight + padding * 2);
+  bgParams["width"] = std::to_string(25 + biggestValue.length() * 7);
+  bgParams["opacity"] = "1";
+  bgParams["fill"] = "white";
+  bgParams["fill-opacity"] = "0.7";
+  bgParams["stroke"] = "black";
+  bgParams["stroke-width"] = "1";
+  
+  _w.openTag("rect", bgParams);
+  _w.closeTag();
+  
+  // Legend entries
+  size_t entryIndex = 0;
+  for (const auto& entry : sortedLabels) {
+    double currentY = legendY + padding + (entryIndex * entryHeight);
+    
+    // KEY
+    std::map<std::string, std::string> keyParams;
+    keyParams["x"] = std::to_string(legendX + padding);
+    keyParams["y"] = std::to_string(currentY + 15);
+    keyParams["font-family"] = "Ubuntu";
+    keyParams["font-size"] = "12";
+    keyParams["fill"] = "#" + entry.second.second;
+    keyParams["font-weight"] = "bold";
+    
+    _w.openTag("text", keyParams);
+    _w.writeText(entry.second.first + ": ");
+    _w.closeTag();
+    
+    // VALUE
+    std::map<std::string, std::string> valueParams;
+    valueParams["x"] = std::to_string(legendX + padding + 25);
+    valueParams["y"] = std::to_string(currentY + 15);
+    valueParams["font-family"] = "Ubuntu";
+    valueParams["font-size"] = "12";
+    valueParams["fill"] = "#" + entry.second.second;
+    
+    _w.openTag("text", valueParams);
+    _w.writeText(entry.first);
+    _w.closeTag();
+
+    entryIndex++;
+  }
+
   _w.closeTag();
 }
 
