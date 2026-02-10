@@ -103,7 +103,8 @@ class SvgRenderer : public Renderer {
 
   void renderLineLabels(const label::Labeller& lbler,
                         const RenderParams& params,
-                        std::map<std::string, std::pair<std::string, std::string>>& simplerLabels);
+                        std::map<std::string, std::pair<std::string, std::string>>& simplerLabels,
+                        bool unifiedLineLabelCodes);
 
   void renderStationLabels(const label::Labeller& lbler,
                            const RenderParams& params);

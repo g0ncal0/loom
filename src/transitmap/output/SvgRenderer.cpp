@@ -154,7 +154,7 @@ void SvgRenderer::print(const RenderGraph& outG) {
 
   LOGTO(DEBUG, std::cerr) << "Writing labels...";
   if (_cfg->renderLabels) {
-    renderLineLabels(labeller, rparams, simplerLabels);
+    renderLineLabels(labeller, rparams, simplerLabels, _cfg->unifiedLineLabelCodes);
     renderStationLabels(labeller, rparams);
   }
 
@@ -818,7 +818,8 @@ void SvgRenderer::renderStationLabels(const Labeller& labeller,
 // _____________________________________________________________________________
 void SvgRenderer::renderLineLabels(const Labeller& labeller,
                                    const RenderParams& rparams,
-                                   std::map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
+                                   std::map<std::string, std::pair<std::string, std::string>>& simplerLabels,
+                                   bool unifiedLineLabelCodes) {
   _w.openTag("g");
   size_t id = 0;
   for (auto label : labeller.getLineLabels()) {
@@ -877,7 +878,8 @@ void SvgRenderer::renderLineLabels(const Labeller& labeller,
       _w.openTag("tspan",
                  {{"fill", "#" + line->color()}, {"dx", util::toString(dy)}});
       dy = (label.fontSize * _cfg->outputResolution) / 3;
-      _w.writeText(simplerLabels[line->label()].first);
+      if (unifiedLineLabelCodes) _w.writeText(simplerLabels[line->label()].first);
+      else _w.writeText(line->label());
       _w.closeTag();
     }
     _w.closeTag();
