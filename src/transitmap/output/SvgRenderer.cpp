@@ -45,7 +45,7 @@ void SvgRenderer::print(const RenderGraph& outG) {
       box, outG.getMaxLineNum() * (_cfg->lineWidth + _cfg->lineSpacing));
 
   Labeller labeller(_cfg);
-  std::map<std::string, std::pair<std::string, std::string>> simplerLabels;
+  std::unordered_map<std::string, std::pair<std::string, std::string>> simplerLabels;
   if (_cfg->renderLabels) {
     LOGTO(DEBUG, std::cerr) << "Rendering labels...";
     labeller.label(outG, _cfg->dontLabelDeg2, simplerLabels);
@@ -818,7 +818,7 @@ void SvgRenderer::renderStationLabels(const Labeller& labeller,
 // _____________________________________________________________________________
 void SvgRenderer::renderLineLabels(const Labeller& labeller,
                                    const RenderParams& rparams,
-                                   std::map<std::string, std::pair<std::string, std::string>>& simplerLabels,
+                                   std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels,
                                    bool unifiedLineLabelCodes) {
   _w.openTag("g");
   size_t id = 0;
@@ -891,9 +891,18 @@ void SvgRenderer::renderLineLabels(const Labeller& labeller,
 }
 
 // _____________________________________________________________________________
-void SvgRenderer::renderLineLabelsLegend(std::map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
+void SvgRenderer::renderLineLabelsLegend(std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
+  std::vector<std::pair<std::string, std::pair<std::string, std::string>>> sortedLabels(simplerLabels.begin(), simplerLabels.end());
+  std::sort(sortedLabels.begin(), sortedLabels.end(), [](const std::pair<std::string, std::pair<std::string, std::string>>& a, const std::pair<std::string, std::pair<std::string, std::string>>& b) {
+    if (a.second.second != b.second.second) {
+      return a.second.second < b.second.second;
+    }
+    
+    return a.second.first < b.second.first;
+  });
+
   std::string biggestValue;
-  for (const auto& entry : simplerLabels) {
+  for (const auto& entry : sortedLabels) {
     if (entry.first.length() > biggestValue.length()) {
       biggestValue = entry.first;
     }
@@ -925,7 +934,7 @@ void SvgRenderer::renderLineLabelsLegend(std::map<std::string, std::pair<std::st
   
   // Legend entries
   size_t entryIndex = 0;
-  for (const auto& entry : simplerLabels) {
+  for (const auto& entry : sortedLabels) {
     double currentY = legendY + padding + (entryIndex * entryHeight);
     
     // KEY

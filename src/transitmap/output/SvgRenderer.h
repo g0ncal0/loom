@@ -103,10 +103,10 @@ class SvgRenderer : public Renderer {
 
   void renderLineLabels(const label::Labeller& lbler,
                         const RenderParams& params,
-                        std::map<std::string, std::pair<std::string, std::string>>& simplerLabels,
+                        std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels,
                         bool unifiedLineLabelCodes);
 
-  void renderLineLabelsLegend(std::map<std::string, std::pair<std::string, std::string>>& simplerLabels);
+  void renderLineLabelsLegend(std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels);
 
   void renderStationLabels(const label::Labeller& lbler,
                            const RenderParams& params);

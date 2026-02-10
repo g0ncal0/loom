@@ -19,7 +19,7 @@ using util::geo::PolyLine;
 Labeller::Labeller(const config::Config* cfg) : _cfg(cfg) {}
 
 // _____________________________________________________________________________
-void Labeller::label(const RenderGraph& g, bool notDeg2, std::map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
+void Labeller::label(const RenderGraph& g, bool notDeg2, std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
   labelStations(g, notDeg2);
   labelLines(g, simplerLabels);
 }
@@ -199,7 +199,7 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double>& band,
 }
 
 // _____________________________________________________________________________
-void Labeller::labelLines(const RenderGraph& g, std::map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
+void Labeller::labelLines(const RenderGraph& g, std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
   int simplerLabelNum = 0;
   
   LineLblIdx labelIdx = LineLblIdx();
