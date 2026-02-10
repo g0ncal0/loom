@@ -19,9 +19,9 @@ using util::geo::PolyLine;
 Labeller::Labeller(const config::Config* cfg) : _cfg(cfg) {}
 
 // _____________________________________________________________________________
-void Labeller::label(const RenderGraph& g, bool notDeg2, std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
+void Labeller::label(const RenderGraph& g, bool notDeg2, std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels, bool unifiedLineLabelCodes) {
   labelStations(g, notDeg2);
-  labelLines(g, simplerLabels);
+  labelLines(g, simplerLabels, unifiedLineLabelCodes);
 }
 
 // _____________________________________________________________________________
@@ -199,7 +199,7 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double>& band,
 }
 
 // _____________________________________________________________________________
-void Labeller::labelLines(const RenderGraph& g, std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
+void Labeller::labelLines(const RenderGraph& g, std::unordered_map<std::string, std::pair<std::string, std::string>>& simplerLabels, bool unifiedLineLabelCodes) {
   int simplerLabelNum = 0;
   
   LineLblIdx labelIdx = LineLblIdx();
@@ -213,15 +213,17 @@ void Labeller::labelLines(const RenderGraph& g, std::unordered_map<std::string, 
 
       double labelW = ((fontSize / 3) * (e->pl().getLines().size() - 1));
 
-      for (auto lo : e->pl().getLines()) {
-        if (simplerLabels.count(lo.labelLine->label())) continue;
-        if (lo.labelLine->label().length() <= 10) continue;
+      if (unifiedLineLabelCodes) {
+        for (auto lo : e->pl().getLines()) {
+          if (simplerLabels.count(lo.labelLine->label())) continue;
+          if (lo.labelLine->label().length() <= 10) continue;
 
-        simplerLabels[lo.labelLine->label()] = {"L" + std::to_string(++simplerLabelNum), lo.labelLine->color()};
+          simplerLabels[lo.labelLine->label()] = {"L" + std::to_string(++simplerLabelNum), lo.labelLine->color()};
+        }
       }
 
       for (auto lo : e->pl().getLines()) {
-        if (simplerLabels.count(lo.labelLine->label())) labelW += simplerLabels[lo.labelLine->label()].first.size() * (fontSize);
+        if (unifiedLineLabelCodes && simplerLabels.count(lo.labelLine->label())) labelW += simplerLabels[lo.labelLine->label()].first.size() * (fontSize);
         else labelW += lo.labelLine->label().size() * (fontSize);
       }
 
@@ -232,10 +234,11 @@ void Labeller::labelLines(const RenderGraph& g, std::unordered_map<std::string, 
 
       for (int dir = -1; dir < 2; dir += 2) {
         double start = 0;
-        while (start + labelW <= geomLen) {
+        while (start + labelW <= geomLen || (unifiedLineLabelCodes && cands.empty())) {
           PolyLine<double> cand(util::geo::segment(
               *e->pl().getGeom(), start / geomLen, (start + labelW) / geomLen));
-          if (cand.getLength() < 5) break;
+          if (unifiedLineLabelCodes && cand.getLength() <= 0) break;
+          else if (cand.getLength() <= 5) break;
           cand.offsetPerp(dir * (g.getTotalWidth(e) / 2 +
                                  (_cfg->lineSpacing + _cfg->lineWidth)));
 
@@ -289,7 +292,7 @@ void Labeller::labelLines(const RenderGraph& g, std::unordered_map<std::string, 
             }
           }
 
-          if (!block)
+          if (!block || unifiedLineLabelCodes)
             cands.push_back({cand, fabs((geomLen / 2) - (start + (labelW / 2))),
                              fontSize, lines});
           start += step;

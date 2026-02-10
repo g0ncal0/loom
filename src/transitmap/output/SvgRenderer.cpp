@@ -48,7 +48,7 @@ void SvgRenderer::print(const RenderGraph& outG) {
   std::unordered_map<std::string, std::pair<std::string, std::string>> simplerLabels;
   if (_cfg->renderLabels) {
     LOGTO(DEBUG, std::cerr) << "Rendering labels...";
-    labeller.label(outG, _cfg->dontLabelDeg2, simplerLabels);
+    labeller.label(outG, _cfg->dontLabelDeg2, simplerLabels, _cfg->unifiedLineLabelCodes);
     box = util::geo::extendBox(labeller.getBBox(), box);
   }
 
