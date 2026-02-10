@@ -886,6 +886,77 @@ void SvgRenderer::renderLineLabels(const Labeller& labeller,
     _w.closeTag();
   }
   _w.closeTag();
+
+  if (unifiedLineLabelCodes) renderLineLabelsLegend(simplerLabels);
+}
+
+// _____________________________________________________________________________
+void SvgRenderer::renderLineLabelsLegend(std::map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
+  std::string biggestValue;
+  for (const auto& entry : simplerLabels) {
+    if (entry.first.length() > biggestValue.length()) {
+      biggestValue = entry.first;
+    }
+  }
+  
+  _w.openTag("g", {{"id", "legend"}});
+    
+  double legendX = 10;
+  double legendY = 10;
+  double entryHeight = 20;
+  double padding = 5;
+  double boxWidth = 200;
+  
+  // Background box
+  std::map<std::string, std::string> bgParams;
+  bgParams["x"] = std::to_string(legendX);
+  bgParams["y"] = std::to_string(legendY);
+  bgParams["width"] = std::to_string(boxWidth);
+  bgParams["height"] = std::to_string(simplerLabels.size() * entryHeight + padding * 2);
+  bgParams["width"] = std::to_string(25 + biggestValue.length() * 7);
+  bgParams["opacity"] = "1";
+  bgParams["fill"] = "white";
+  bgParams["fill-opacity"] = "0.7";
+  bgParams["stroke"] = "black";
+  bgParams["stroke-width"] = "1";
+  
+  _w.openTag("rect", bgParams);
+  _w.closeTag();
+  
+  // Legend entries
+  size_t entryIndex = 0;
+  for (const auto& entry : simplerLabels) {
+    double currentY = legendY + padding + (entryIndex * entryHeight);
+    
+    // KEY
+    std::map<std::string, std::string> keyParams;
+    keyParams["x"] = std::to_string(legendX + padding);
+    keyParams["y"] = std::to_string(currentY + 15);
+    keyParams["font-family"] = "Ubuntu";
+    keyParams["font-size"] = "12";
+    keyParams["fill"] = "#" + entry.second.second;
+    keyParams["font-weight"] = "bold";
+    
+    _w.openTag("text", keyParams);
+    _w.writeText(entry.second.first + ": ");
+    _w.closeTag();
+    
+    // VALUE
+    std::map<std::string, std::string> valueParams;
+    valueParams["x"] = std::to_string(legendX + padding + 25);
+    valueParams["y"] = std::to_string(currentY + 15);
+    valueParams["font-family"] = "Ubuntu";
+    valueParams["font-size"] = "12";
+    valueParams["fill"] = "#" + entry.second.second;
+    
+    _w.openTag("text", valueParams);
+    _w.writeText(entry.first);
+    _w.closeTag();
+
+    entryIndex++;
+  }
+
+  _w.closeTag();
 }
 
 // _____________________________________________________________________________
