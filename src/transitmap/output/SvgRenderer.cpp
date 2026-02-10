@@ -878,7 +878,7 @@ void SvgRenderer::renderLineLabels(const Labeller& labeller,
       _w.openTag("tspan",
                  {{"fill", "#" + line->color()}, {"dx", util::toString(dy)}});
       dy = (label.fontSize * _cfg->outputResolution) / 3;
-      if (unifiedLineLabelCodes) _w.writeText(simplerLabels[line->label()].first);
+      if (unifiedLineLabelCodes && simplerLabels.count(line->label())) _w.writeText(simplerLabels[line->label()].first);
       else _w.writeText(line->label());
       _w.closeTag();
     }

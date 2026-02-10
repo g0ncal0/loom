@@ -214,13 +214,15 @@ void Labeller::labelLines(const RenderGraph& g, std::unordered_map<std::string, 
       double labelW = ((fontSize / 3) * (e->pl().getLines().size() - 1));
 
       for (auto lo : e->pl().getLines()) {
-        if (simplerLabels.count(lo.labelLine->label()) > 0) continue;
+        if (simplerLabels.count(lo.labelLine->label())) continue;
+        if (lo.labelLine->label().length() <= 10) continue;
 
         simplerLabels[lo.labelLine->label()] = {"L" + std::to_string(++simplerLabelNum), lo.labelLine->color()};
       }
 
       for (auto lo : e->pl().getLines()) {
-        labelW += simplerLabels[lo.labelLine->label()].first.size() * (fontSize);
+        if (simplerLabels.count(lo.labelLine->label())) labelW += simplerLabels[lo.labelLine->label()].first.size() * (fontSize);
+        else labelW += lo.labelLine->label().size() * (fontSize);
       }
 
       // try out positions
