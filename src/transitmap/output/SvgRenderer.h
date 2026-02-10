@@ -102,7 +102,8 @@ class SvgRenderer : public Renderer {
                         const RenderParams& params);
 
   void renderLineLabels(const label::Labeller& lbler,
-                        const RenderParams& params);
+                        const RenderParams& params,
+                        std::map<std::string, std::pair<std::string, std::string>>& simplerLabels);
 
   void renderStationLabels(const label::Labeller& lbler,
                            const RenderParams& params);

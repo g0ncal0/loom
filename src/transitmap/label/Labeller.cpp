@@ -19,9 +19,9 @@ using util::geo::PolyLine;
 Labeller::Labeller(const config::Config* cfg) : _cfg(cfg) {}
 
 // _____________________________________________________________________________
-void Labeller::label(const RenderGraph& g, bool notDeg2) {
+void Labeller::label(const RenderGraph& g, bool notDeg2, std::map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
   labelStations(g, notDeg2);
-  labelLines(g);
+  labelLines(g, simplerLabels);
 }
 
 // _____________________________________________________________________________
@@ -199,7 +199,9 @@ Overlaps Labeller::getOverlaps(const util::geo::MultiLine<double>& band,
 }
 
 // _____________________________________________________________________________
-void Labeller::labelLines(const RenderGraph& g) {
+void Labeller::labelLines(const RenderGraph& g, std::map<std::string, std::pair<std::string, std::string>>& simplerLabels) {
+  int simplerLabelNum = 0;
+  
   LineLblIdx labelIdx = LineLblIdx();
   for (auto n : g.getNds()) {
     for (auto e : n->getAdjList()) {
@@ -212,7 +214,13 @@ void Labeller::labelLines(const RenderGraph& g) {
       double labelW = ((fontSize / 3) * (e->pl().getLines().size() - 1));
 
       for (auto lo : e->pl().getLines()) {
-        labelW += lo.labelLine->label().size() * (fontSize);
+        if (simplerLabels.count(lo.labelLine->label()) > 0) continue;
+
+        simplerLabels[lo.labelLine->label()] = {"L" + std::to_string(++simplerLabelNum), lo.labelLine->color()};
+      }
+
+      for (auto lo : e->pl().getLines()) {
+        labelW += simplerLabels[lo.labelLine->label()].first.size() * (fontSize);
       }
 
       // try out positions

@@ -85,7 +85,7 @@ class Labeller {
  public:
   Labeller(const config::Config* cfg);
 
-  void label(const shared::rendergraph::RenderGraph& g, bool notdeg2);
+  void label(const shared::rendergraph::RenderGraph& g, bool notdeg2, std::map<std::string, std::pair<std::string, std::string>>& simplerLabels);
 
   const std::vector<LineLabel>& getLineLabels() const;
   const std::vector<StationLabel>& getStationLabels() const;
@@ -101,7 +101,7 @@ class Labeller {
   const config::Config* _cfg;
 
   void labelStations(const shared::rendergraph::RenderGraph& g, bool notdeg2);
-  void labelLines(const shared::rendergraph::RenderGraph& g);
+  void labelLines(const shared::rendergraph::RenderGraph& g, std::map<std::string, std::pair<std::string, std::string>>& simplerLabels);
 
   Overlaps getOverlaps(const util::geo::MultiLine<double>& band,
                        const shared::linegraph::LineNode* forNd,
