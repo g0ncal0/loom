@@ -952,7 +952,7 @@ void SvgRenderer::renderLineLabelsLegend(std::unordered_map<std::string, std::pa
     
     // VALUE
     std::map<std::string, std::string> valueParams;
-    valueParams["x"] = std::to_string(legendX + padding + 25);
+    valueParams["x"] = std::to_string(legendX + padding + 32);
     valueParams["y"] = std::to_string(currentY + 15);
     valueParams["font-family"] = "Ubuntu";
     valueParams["font-size"] = "12";
