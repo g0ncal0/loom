@@ -922,7 +922,7 @@ void SvgRenderer::renderLineLabelsLegend(std::unordered_map<std::string, std::pa
   bgParams["y"] = std::to_string(legendY);
   bgParams["width"] = std::to_string(boxWidth);
   bgParams["height"] = std::to_string(simplerLabels.size() * entryHeight + padding * 2);
-  bgParams["width"] = std::to_string(25 + biggestValue.length() * 7);
+  bgParams["width"] = std::to_string(legendX + padding + 25 + biggestValue.length() * 5.6);
   bgParams["opacity"] = "1";
   bgParams["fill"] = "white";
   bgParams["fill-opacity"] = "0.7";
